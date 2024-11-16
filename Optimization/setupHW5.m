@@ -41,7 +41,7 @@ g = 9.81;
 
 %% Parameter vector
 params   = [m1 m2 m3 m4 I1 I2 I3 I4 I5 Ir N l_O_m1 l_B_m2 l_A_m3 l_C_m4 l_OA l_OB l_AC l_DE g]';
-q_max_val = [pi; 3*pi/4; Inf];
-q_min_val = [-pi; pi/6; -Inf];
+q_max_val = [pi; 3*pi/4];
+q_min_val = [-pi; pi/6];
 tau_max_val = 3;
 tau_min_val = -3;

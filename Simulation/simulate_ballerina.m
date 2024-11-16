@@ -34,7 +34,7 @@ function simulate_ballerina()
     % u(2,2000:4000) = 0.1;
     % u(2,4000:5000) = -0.1;
     % u(2,4000:5000) = 0.08;
-    u(3,1:500) = -0.05;
+    u(3,1:500) = -0.05; % negative = clockwise
 
     for i=1:num_steps-1
         % z_out(:,i) = joint_limits(z_out(:,i));

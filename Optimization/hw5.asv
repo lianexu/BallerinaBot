@@ -69,21 +69,13 @@ tau_min = opti.parameter(1);
 % on the right hand side. 
 
 % negative = clockwise
-opti.subject_to(dt1 > 0);
-opti.subject_to(dt2 > 0);
 
 %%% Phase 1 constraints
 opti.subject_to(q1(:, 1) == q1_0);
 opti.subject_to(q1_dot(:, 1) == q1_dot_0);
 
-% opti.subject_to(q1(3, 2:end) == q1(3, 1));
-% opti.subject_to(q1_dot(3, 2:end) == 0);
-opti.subject_to(q1(3, 2:end) <= q1(3, 1) + 0.001);
-opti.subject_to(q1(3, 2:end) >= q1(3, 1) - 0.001);
-
-opti.subject_to(q1_dot(3, 2:end) <= 0.001);
-opti.subject_to(q1_dot(3, 2:end) >= -0.001);
-
+opti.subject_to(q1(3, 2:end) == q1(3, 1));
+opti.subject_to(q1_dot(3, 2:end) == 0);
 opti.subject_to(u1(3, :) >= 0);
 
 for k = 1:N1 - 1
@@ -112,7 +104,7 @@ opti.subject_to(q2_dot(3, :) >= -0.001);
 
 % opti.subject_to(u2(3, :) == 0); % Body torque all 0 for phase 2
 opti.subject_to(u2(3, :) <= 0.001); % Body torque all 0 for phase 2
-opti.subject_to(u2(3, :) >= -0.001); % Body torque all 0 for phase 2
+opti.subject_to(u2(3, :)  0); % Body torque all 0 for phase 2
 
 for k = 1:N2 - 1
     z_k = [q2(:, k); q2_dot(:, k)];
@@ -177,88 +169,6 @@ opti.set_value(tau_min, tau_min_val);
 
 %% [SOLVE]:
 soln = opti.solve();
-
-q_soln = soln.value(q1);
-q_dot_soln = soln.value(q1_dot);
-z_soln = [q_soln; q_dot_soln];
-u_soln = soln.value(u1);
-dt_soln = soln.value(dt1);
-dt = dt_soln;
-t_span = 0:dt_soln:(N1- 1)*dt_soln;  
-dt_sim = 0.001;
-t_sim = 0:dt_sim:t_span(end);
-
-N_sim = length(t_sim);
-% q1_soln = soln.value(q1);
-% q1_dot_soln = soln.value(q1_dot);
-% z1_soln = [q1_soln; q1_dot_soln];
-% u1_soln = soln.value(u1);
-% dt1_soln = soln.value(dt1);
-% 
-% q2_soln = soln.value(q2);
-% q2_dot_soln = soln.value(q2_dot);
-% z2_soln = [q2_soln; q2_dot_soln];
-% u2_soln = soln.value(u2);
-% dt2_soln = soln.value(dt2);
-% 
-% 
-% t1_span = 0:dt1_soln:(N1- 1)*dt1_soln;  
-% t2_span = 0:dt2_soln:(N2- 1)*dt2_soln;  
-% 
-% dt1_sim = 0.001;
-% t1_sim = 0:dt_sim:t1_span(end);
-% N1_sim = length(t1_sim);
-
-% % Interpolation schemes: {'nearest', 'linear', 'spline', 'pchip', 'cubic'}
-u_out = interpolateOptimizedControl(t_span, u_soln, t_sim, 'cubic');
-% u_out(:, end - floor(dt/dt_sim):end) = 0;
-z_sim = zeros(6, N_sim);
-z_sim(:,1) = z_0;
-for i = 1:N_sim-1
-    A = full(A_fn(z_sim(:, i), params));
-    b = full(b_fn(z_sim(:, i), u_out(:, i), params));
-    qdd = A\(b);
-    z_sim(4:6, i+1) = z_sim(4:6, i) + qdd*dt;
-    z_sim(1:3, i+1) = z_sim(1:3,i) + z_sim(4:6,i+1)*dt;
-end
-
-%% [PLOTS]:
-% figure(1); clf; hold on;
-% title("Joint trajectory");
-% plot(t_span, q_soln(1, :), 'r--');
-% plot(t_span, q_soln(2, :), 'b--');
-% plot(t_sim, z_sim(1, :), 'r-');
-% plot(t_sim, z_sim(2, :), 'b-');
-% legend('q_1_{opt}', 'q_2_{opt}', 'q_1_{sim}', 'q_2_{sim}');
-% xlabel('Time (s)'); ylabel('q (rad)');
-% 
-% figure(2); clf; hold on;
-% title("Torque trajectory");
-% stairs(t_span(1:end-1), u_soln(1, :), 'r--');
-% stairs(t_span(1:end-1), u_soln(2, :), 'b--');
-% stairs(t_sim, u_out(1, :), 'r-');
-% stairs(t_sim, u_out(2, :), 'b-');
-% legend('\tau_1_{opt}', '\tau_2_{opt}', '\tau_1_{sim}', '\tau_2_{sim}');
-% xlabel('Time (s)'); ylabel('\tau (Nm)');
-
-figure(3); clf; hold on;
-title("Optimization animation");
-animateBallerinaTrajectory(t_span, z_soln, params, dt_soln);
-% 
-% figure(4); clf; hold on;
-% title("Simulation animation");
-% animateBallerinaTrajectory(t_sim, z_sim, params, dt_sim);
-
-function [u_interp] = interpolateOptimizedControl(t_span, u_soln, t_sim, interp_scheme)
-    u_interp = [interp1(t_span(1:end-1), u_soln(1, :), t_sim, interp_scheme);
-                interp1(t_span(1:end-1), u_soln(2, :), t_sim, interp_scheme);
-                interp1(t_span(1:end-1), u_soln(3, :), t_sim, interp_scheme)];
-end
-
-
-
-
-
 % q_soln = soln.value(q);
 % q_dot_soln = soln.value(q_dot);
 % z_soln = [q_soln; q_dot_soln];
