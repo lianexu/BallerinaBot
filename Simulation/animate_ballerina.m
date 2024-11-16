@@ -1,4 +1,5 @@
 function animate_ballerina(tspan, x, p, dt)
+    figure(2);
     % Prepare plot handles
     hold on
     h_OB = plot([0],[0],'LineWidth',2);
@@ -60,5 +61,7 @@ function animate_ballerina(tspan, x, p, dt)
         % pause(dt)
         pause(dt);
     end
+
+    hold off;
 end
     
