@@ -1,5 +1,5 @@
-function animate_ballerina(tspan, x, p, dt)
-    figure(2);
+function animateBallerinaTrajectory(tspan, x, p, dt)
+    keypoints_fn = casadi.Function.load('codegen/keypoints_fn.casadi');
     % Prepare plot handles
     hold on
     h_OB = plot([0],[0],'LineWidth',2);
@@ -9,7 +9,6 @@ function animate_ballerina(tspan, x, p, dt)
     hip_motor = plot([0],[0], 'LineWidth', 3);
     limits1 =  plot([0],[0], 'LineWidth', 2, 'LineStyle',':', 'Color', 'r'); % draw the hardware limits in red
     limits2 =  plot([0],[0], 'LineWidth', 2, 'LineStyle', ':', 'Color', 'r'); % draw the hardware limits in red
-     
     
     xlabel('x'); ylabel('y');
     h_title = subtitle('t=0.0s');
@@ -25,14 +24,13 @@ function animate_ballerina(tspan, x, p, dt)
         % end
         t = tspan(i);
         z = x(:,i); 
-        keypoints = full(keypoints_ballerina(z,p));
+        keypoints = full(keypoints_fn(z,p));
     
         rA = keypoints(:,1); % Vector to base of cart
         rB = keypoints(:,2);
         rC = keypoints(:,3); % Vector to tip of pendulum
         rD = keypoints(:,4);
         rE = keypoints(:,5);
-
         th3 = z(3);
     
         set(h_title,'String',  sprintf('t=%.2f',t) ); % update title
@@ -58,9 +56,7 @@ function animate_ballerina(tspan, x, p, dt)
         set(h_CE,'XData',[rC(1) rE(1)]);
         set(h_CE,'YData',[rC(2) rE(2)]);
     
-        pause(dt);
+        pause(dt)
     end
-
-    hold off;
 end
     
