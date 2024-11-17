@@ -28,8 +28,8 @@ setupHW5();
 % dt = 0.025;                  % Discretization time step
 % t_span = 0:dt:(N - 1)*dt;   % Time span
 q_dim = 3; 
-N1 = 10;
-N2 = 10;
+N1 = 20;
+N2 = 15;
 opti = casadi.Opti();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SECTION 2.1.1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -70,13 +70,23 @@ tau_min = opti.parameter(1);
 
 % negative = clockwise
 
+opti.subject_to(dt1 >= 0);
+opti.subject_to(dt2 >= 0);
+
 %%% Phase 1 constraints
 opti.subject_to(q1(:, 1) == q1_0);
 opti.subject_to(q1_dot(:, 1) == q1_dot_0);
 
-opti.subject_to(q1(3, 2:end) == q1(3, 1));
+% opti.subject_to(q1(3, 2:end) == q1(3, 1));
+% opti.subject_to(q1_dot(3, 2:end) == 0);
+opti.subject_to(q1(3, 2:end) <= q1(3, 1) + 0.001);
+opti.subject_to(q1(3, 2:end) >= q1(3, 1) - 0.001);
+
+% opti.subject_to(q1_dot(3, 2:end) <= 0.001);
+% opti.subject_to(q1_dot(3, 2:end) >= 0);
 opti.subject_to(q1_dot(3, 2:end) == 0);
-opti.subject_to(u1(3, :) >= 0);
+
+opti.subject_to(u1(3, :) <= 0);
 
 for k = 1:N1 - 1
     z_k = [q1(:, k); q1_dot(:, k)];
@@ -99,12 +109,12 @@ opti.subject_to(q2(:, 1) == q1(:,N1));
 opti.subject_to(q2_dot(:, 1) == q1_dot(:,N1));
 opti.subject_to(q2(3, N2) == q1(3,1) - 2*pi);
 
-opti.subject_to(q2_dot(3, :) <= 0.001);
-opti.subject_to(q2_dot(3, :) >= -0.001);
+opti.subject_to(q2_dot(3, :) <= 0);
 
-% opti.subject_to(u2(3, :) == 0); % Body torque all 0 for phase 2
-opti.subject_to(u2(3, :) <= 0.001); % Body torque all 0 for phase 2
-opti.subject_to(u2(3, :)  0); % Body torque all 0 for phase 2
+% opti.subject_to(q2_dot(3, :) <= 0.001);
+% opti.subject_to(q2_dot(3, :) >= -0.001);
+
+opti.subject_to(u2(3, :) == 0); % Body torque all 0 for phase 2
 
 for k = 1:N2 - 1
     z_k = [q2(:, k); q2_dot(:, k)];
@@ -169,31 +179,72 @@ opti.set_value(tau_min, tau_min_val);
 
 %% [SOLVE]:
 soln = opti.solve();
-% q_soln = soln.value(q);
-% q_dot_soln = soln.value(q_dot);
-% z_soln = [q_soln; q_dot_soln];
-% u_soln = soln.value(u);
+
+q1_soln = soln.value(q1);
+q1_dot_soln = soln.value(q1_dot);
+z1_soln = [q1_soln; q1_dot_soln];
+u1_soln = soln.value(u1);
+dt1_soln = soln.value(dt1);
+
+q2_soln = soln.value(q2);
+q2_dot_soln = soln.value(q2_dot);
+z2_soln = [q2_soln; q2_dot_soln];
+u2_soln = soln.value(u2);
+dt2_soln = soln.value(dt2);
+
+
+t1_span = 0:dt1_soln:(N1-1)*dt1_soln;
+t2_span = (N1-1)*dt1_soln:dt2_soln:(N2-1)*dt2_soln + (N1-1)*dt1_soln;
+
+dt_sim = 0.001;
+t1_sim = 0:dt_sim:t1_span(end);
+t2_sim = t1_span(end):dt_sim:t2_span(end)+t1_span(end);
+N1_sim = length(t1_sim);
+N2_sim = length(t2_sim);
+
+t_span = [t1_span t2_span];
+z_soln = [z1_soln z2_soln];
 % 
-% 
-% %% [SIMULATE]:
-% dt_sim = 0.001;
-% t_sim = 0:dt_sim:t_span(end);
-% N_sim = length(t_sim);
-% 
+figure(3); clf; hold on;
+title("Optimization animation");
+animateBallTraj2(t_span, z_soln, params, dt1_soln, dt2_soln, N1, N2);
+
+
 % % Interpolation schemes: {'nearest', 'linear', 'spline', 'pchip', 'cubic'}
-% u_out = interpolateOptimizedControl(t_span, u_soln, t_sim, 'cubic');
-% u_out(:, end - floor(dt/dt_sim):end) = 0;
-% z_sim = zeros(4, N_sim);
-% z_sim(:,1) = z_0;
-% for i = 1:N_sim-1
-%     A = full(A_fn(z_sim(:, i), params));
-%     b = full(b_fn(z_sim(:, i), u_out(:, i), params));
-%     qdd = A\(b);
-%     z_sim(3:4, i+1) = z_sim(3:4, i) + qdd*dt_sim;
-%     z_sim(1:2, i+1) = z_sim(1:2,i) + z_sim(3:4,i+1)*dt_sim;
-% end
-% 
-% %% [PLOTS]:
+u1_out = interpolateOptimizedControl(t1_span, u1_soln, t1_sim, 'spline');
+u1_out(:, end - floor(dt1_soln/dt_sim):end) = 0;
+z1_sim = zeros(6, N1_sim);
+z1_sim(:,1) = z_0;
+for i = 1:N1_sim-1
+    A = full(A_fn(z1_sim(:, i), params));
+    b = full(b_fn(z1_sim(:, i), u1_out(:, i), params));
+    qdd = A\(b);
+    z1_sim(4:6, i+1) = z1_sim(4:6, i) + qdd*dt_sim;
+    z1_sim(1:3, i+1) = z1_sim(1:3,i) + z1_sim(4:6,i+1)*dt_sim;
+end
+
+u2_out = interpolateOptimizedControl(t2_span, u2_soln, t2_sim, 'spline');
+u2_out(:, end - floor(dt1_soln/dt_sim):end) = 0;
+z2_sim = zeros(6, N2_sim);
+z2_sim(:,1) = z2_soln(:,1);
+for i = 1:N2_sim-1
+    A = full(A_fn(z2_sim(:, i), params));
+    b = full(b_fn(z2_sim(:, i), u2_out(:, i), params));
+    Fc = contact_force(z2_sim(:, i));
+
+    qdd = A\(b);
+    z2_sim(4:6, i+1) = z2_sim(4:6, i) + qdd*dt_sim;
+    z2_sim(1:3, i+1) = z2_sim(1:3,i) + z2_sim(4:6,i+1)*dt_sim;
+end
+
+t_sim = [t1_sim t2_sim];
+z_sim = [z1_sim z2_sim];
+
+figure(4); clf; hold on;
+title("Simulation animation");
+animateBallerinaTrajectory(t_sim, z_sim, params, dt_sim);
+
+%% [PLOTS]:
 % figure(1); clf; hold on;
 % title("Joint trajectory");
 % plot(t_span, q_soln(1, :), 'r--');
@@ -211,16 +262,75 @@ soln = opti.solve();
 % stairs(t_sim, u_out(2, :), 'b-');
 % legend('\tau_1_{opt}', '\tau_2_{opt}', '\tau_1_{sim}', '\tau_2_{sim}');
 % xlabel('Time (s)'); ylabel('\tau (Nm)');
-% 
+
 % figure(3); clf; hold on;
 % title("Optimization animation");
-% animateTrajectory(t_span, z_soln, params, dt);
-% 
+% animateBallerinaTrajectory(t_span, z_soln, params, 0.1);
+
 % figure(4); clf; hold on;
 % title("Simulation animation");
-% animateTrajectory(t_sim, z_sim, params, dt_sim);
-% 
-% function [u_interp] = interpolateOptimizedControl(t_span, u_soln, t_sim, interp_scheme)
-%     u_interp = [interp1(t_span(1:end-1), u_soln(1, :), t_sim, interp_scheme);
-%                 interp1(t_span(1:end-1), u_soln(2, :), t_sim, interp_scheme)];
-% end
+% animateBallerinaTrajectory(t_sim, z_sim, params, 0.5);
+
+function [u_interp] = interpolateOptimizedControl(t_span, u_soln, t_sim, interp_scheme)
+    u_interp = [interp1(t_span(1:end-1), u_soln(1, :), t_sim, interp_scheme);
+                interp1(t_span(1:end-1), u_soln(2, :), t_sim, interp_scheme);
+                interp1(t_span(1:end-1), u_soln(3, :), t_sim, interp_scheme)];
+end
+
+function dz = dynamics(z,u, p)
+    % Get mass matrix
+    A = A_ballerina(z,p);
+    
+    % Get forces
+    % u = [0 0 0]';
+    b = b_ballerina(z,u,p);
+
+    Fc = contact_force(z);
+
+    
+    % Solve for qdd
+    qdd = A\(b+Fc);
+    dz = 0*z;
+    
+    % Form dz
+    dz(1:3) = z(4:6);
+    dz(4:6) = qdd; %- 0.95*z(4:6); % is this how you apply damping??
+end
+
+function Fc = contact_force(z)  %same thing as the joint_limit_torque
+% turn this into the joint limit, rather than a y-coordinate limit
+
+    %% Fixed parameters for contact
+    K_c = 10;
+    D_c = 0.5;
+    
+    theta_1 = z(1); % hip 
+    theta_2 = z(2); % knee
+
+    theta_1_floor = theta_1 - -pi/2; % violated when < 0
+    theta_1_ceiling = pi/3 - theta_1; % violated when < 0
+
+    theta_2_floor = theta_2 - 0.3; % violated when < 0
+    theta_2_ceiling = pi*0.8 - theta_2; % violated when < 0
+
+    theta_1_dot = z(4);
+    theta_2_dot = z(5);
+
+    Fc = [0; 0; 0];
+    if theta_1_floor < 0 && theta_1_dot < 0
+        Fc(1) = -K_c * theta_1_floor - D_c * theta_1_dot;
+    elseif theta_1_ceiling < 0 && theta_1_dot > 0
+        Fc(1) = K_c * theta_1_ceiling - D_c * theta_1_dot;
+    else
+        Fc(1) = 0;
+    end
+
+    if theta_2_floor < 0 && theta_2_dot < 0
+        Fc(2) = -K_c * theta_2_floor - D_c * theta_2_dot;
+    elseif theta_2_ceiling < 0 && theta_2_dot > 0
+        Fc(2) = K_c * theta_2_ceiling - D_c * theta_2_dot;
+    else
+        Fc(2) = 0;
+    end
+
+end
