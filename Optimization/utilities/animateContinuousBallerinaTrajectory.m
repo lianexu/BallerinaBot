@@ -1,4 +1,4 @@
-function animateBallerinaTrajectory(tspan, x, p, dt1, dt2, N1, N2)
+function animateContinuousBallerinaTrajectory(tspan, x, p, dt)% dt1, dt2, N1, N2)
     keypoints_fn = casadi.Function.load('codegen/keypoints_fn.casadi');
     % Prepare plot handles
     hold on
@@ -55,11 +55,8 @@ function animateBallerinaTrajectory(tspan, x, p, dt1, dt2, N1, N2)
         
         set(h_CE,'XData',[rC(1) rE(1)]);
         set(h_CE,'YData',[rC(2) rE(2)]);
-        if i < N1
-            pause(dt1);
-        else
-            pause(dt2);
-        end
+        
+        pause(dt*15)
     end
 end
     

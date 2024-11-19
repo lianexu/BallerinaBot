@@ -166,7 +166,9 @@ cost = N1 * dt1 + N2 * dt2;%  + (q2(3, N2)-(q1(3,1) - 2*pi))^2;
 opti.minimize(cost);
 
 %% [SOLVER]:
-opti.solver('ipopt');
+opts = struct();
+opts.ipopt.max_iter = 5000;
+opti.solver('ipopt', opts);
 
 %% [SET PARAMETER VALUES]:
 z_0 = [-pi/4; pi/2; 0; 0; 0; 0];
@@ -177,7 +179,6 @@ opti.set_value(q_max, q_max_val);
 opti.set_value(q_min, q_min_val);
 opti.set_value(tau_max, tau_max_val);
 opti.set_value(tau_min, tau_min_val);
-
 
 %% [SOLVE]:
 soln = opti.solve();
@@ -194,7 +195,6 @@ z2_soln = [q2_soln; q2_dot_soln];
 u2_soln = soln.value(u2);
 dt2_soln = soln.value(dt2);
 
-
 t1_span = 0:dt1_soln:(N1-1)*dt1_soln;
 t2_span = (N1-1)*dt1_soln:dt2_soln:(N2-1)*dt2_soln + (N1-1)*dt1_soln;
 
@@ -209,8 +209,8 @@ z_soln = [z1_soln z2_soln];
 q_soln = [q1_soln q2_soln];
 % 
 figure(3); clf; hold on;
-title("Optimization animation");
-animateBallTraj2(t_span, z_soln, params, dt1_soln, dt2_soln, N1, N2);
+title("Discrete Animation");
+animateDiscreteBallerinaTrajectory(t_span, z_soln, params, dt1_soln, dt2_soln, N1, N2);
 
 
 % % Interpolation schemes: {'nearest', 'linear', 'spline', 'pchip', 'cubic'}
@@ -229,7 +229,7 @@ for i = 1:N1_sim-1
 end
 
 u2_out = interpolateOptimizedControl(t2_span, u2_soln, t2_sim, 'spline');
-u2_out(:, end - floor(dt1_soln/dt_sim):end) = 0;
+u2_out(:, end - floor(dt2_soln/dt_sim):end) = 0;
 z2_sim = zeros(6, N2_sim);
 z2_sim(:,1) = z2_soln(:,1);
 for i = 1:N2_sim-1
@@ -246,8 +246,8 @@ t_sim = [t1_sim t2_sim];
 z_sim = [z1_sim z2_sim];
 % 
 figure(4); clf; hold on;
-title("Simulation animation");
-animateBallerinaTrajectory(t_sim, z_sim, params, dt_sim);
+title("Continuous Animation");
+animateContinuousBallerinaTrajectory(t_sim, z_sim, params, dt_sim);
 
 figure(1); clf; hold on;
 title("Joint trajectory");
@@ -259,32 +259,90 @@ plot(t_span, q_soln(2, :), 'b--');
 xlabel('Time (s)'); ylabel('q (rad)');
 
 
-%% [PLOTS]:
-% figure(1); clf; hold on;
-% title("Joint trajectory");
-% plot(t_span, q_soln(1, :), 'r--');
-% plot(t_span, q_soln(2, :), 'b--');
-% plot(t_sim, z_sim(1, :), 'r-');
-% plot(t_sim, z_sim(2, :), 'b-');
-% legend('q_1_{opt}', 'q_2_{opt}', 'q_1_{sim}', 'q_2_{sim}');
-% xlabel('Time (s)'); ylabel('q (rad)');
-% 
-% figure(2); clf; hold on;
-% title("Torque trajectory");
-% stairs(t_span(1:end-1), u_soln(1, :), 'r--');
-% stairs(t_span(1:end-1), u_soln(2, :), 'b--');
-% stairs(t_sim, u_out(1, :), 'r-');
-% stairs(t_sim, u_out(2, :), 'b-');
-% legend('\tau_1_{opt}', '\tau_2_{opt}', '\tau_1_{sim}', '\tau_2_{sim}');
-% xlabel('Time (s)'); ylabel('\tau (Nm)');
+% Plot torque trajectory
+figure(2); clf; hold on;
+title("Torque trajectory");
+% Phase 1
+stairs(t1_sim, u1_out(1, :), 'r-', 'DisplayName', '\tau_1 phase 1');
+stairs(t1_sim, u1_out(2, :), 'b-', 'DisplayName', '\tau_2 phase 1');
+stairs(t1_sim, u1_out(3, :), 'g-', 'DisplayName', '\tau_3 phase 1');
+% Phase 2
+stairs(t2_sim, u2_out(1, :), 'r-.', 'DisplayName', '\tau_1 phase 2');
+stairs(t2_sim, u2_out(2, :), 'b-.', 'DisplayName', '\tau_2 phase 2');
+stairs(t2_sim, u2_out(3, :), 'g-.', 'DisplayName', '\tau_3 phase 2');
+legend('show');
+xlabel('Time (s)');
+ylabel('\tau (Nm)');
+grid on;
 
-% figure(3); clf; hold on;
-% title("Optimization animation");
-% animateBallerinaTrajectory(t_span, z_soln, params, 0.1);
 
-% figure(4); clf; hold on;
-% title("Simulation animation");
-% animateBallerinaTrajectory(t_sim, z_sim, params, 0.5);
+% Fit polynomials to torque trajectories
+% Phase 1
+t1 = t1_sim';
+tau1_1 = u1_out(1,:)';
+tau1_2 = u1_out(2,:)';
+tau1_3 = u1_out(3,:)';
+
+p1_1 = polyfit(t1, tau1_1, 5);
+p1_2 = polyfit(t1, tau1_2, 5);
+p1_3 = polyfit(t1, tau1_3, 5);
+tau1_1_fit = polyval(p1_1, t1);
+tau1_2_fit = polyval(p1_2, t1);
+tau1_3_fit = polyval(p1_3, t1);
+
+% Phase 2
+t2 = t2_sim';
+tau2_1 = u2_out(1,:)';
+tau2_2 = u2_out(2,:)';
+tau2_3 = u2_out(3,:)';
+
+p2_1 = polyfit(t2, tau2_1, 5);
+p2_2 = polyfit(t2, tau2_2, 5);
+p2_3 = polyfit(t2, tau2_3, 5);
+tau2_1_fit = polyval(p2_1, t2);
+tau2_2_fit = polyval(p2_2, t2);
+tau2_3_fit = polyval(p2_3, t2);
+
+% Plot fits
+figure(6); clf;
+subplot(2,1,1);
+hold on;
+plot(t1, tau1_1, 'r.', 'DisplayName', 'τ₁ data');
+plot(t1, tau1_2, 'b.', 'DisplayName', 'τ₂ data');
+plot(t1, tau1_3, 'g.', 'DisplayName', 'τ₃ data');
+plot(t1, tau1_1_fit, 'r-', 'DisplayName', 'τ₁ fit');
+plot(t1, tau1_2_fit, 'b-', 'DisplayName', 'τ₂ fit');
+plot(t1, tau1_3_fit, 'g-', 'DisplayName', 'τ₃ fit');
+title('Phase 1 Polynomial Fits');
+xlabel('Time (s)');
+ylabel('Torque (Nm)');
+legend('show');
+grid on;
+
+subplot(2,1,2);
+hold on;
+plot(t2, tau2_1, 'r.', 'DisplayName', 'τ₁ data');
+plot(t2, tau2_2, 'b.', 'DisplayName', 'τ₂ data');
+plot(t2, tau2_3, 'g.', 'DisplayName', 'τ₃ data');
+plot(t2, tau2_1_fit, 'r-', 'DisplayName', 'τ₁ fit');
+plot(t2, tau2_2_fit, 'b-', 'DisplayName', 'τ₂ fit');
+plot(t2, tau2_3_fit, 'g-', 'DisplayName', 'τ₃ fit');
+title('Phase 2 Polynomial Fits');
+xlabel('Time (s)');
+ylabel('Torque (Nm)');
+legend('show');
+grid on;
+
+% Display fit coefficients
+disp('Phase 1 polynomial coefficients (highest order first):');
+fprintf('τ₁: '); disp(p1_1);
+fprintf('τ₂: '); disp(p1_2);
+fprintf('τ₃: '); disp(p1_3);
+
+disp('Phase 2 polynomial coefficients (highest order first):');
+fprintf('τ₁: '); disp(p2_1);
+fprintf('τ₂: '); disp(p2_2);
+fprintf('τ₃: '); disp(p2_3);
 
 function [u_interp] = interpolateOptimizedControl(t_span, u_soln, t_sim, interp_scheme)
     u_interp = [interp1(t_span(1:end-1), u_soln(1, :), t_sim, interp_scheme);
