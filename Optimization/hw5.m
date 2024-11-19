@@ -28,8 +28,8 @@ setupHW5();
 % dt = 0.025;                  % Discretization time step
 % t_span = 0:dt:(N - 1)*dt;   % Time span
 q_dim = 3; 
-N1 = 20;
-N2 = 20;
+N1 = 10;
+N2 = 10;
 opti = casadi.Opti();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SECTION 2.1.1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -105,6 +105,7 @@ end
 %%% Phase 2 constraints
 opti.subject_to(q2(:, 1) == q1(:,N1));
 opti.subject_to(q2_dot(:, 1) == q1_dot(:,N1));
+% opti.subject_to(q2(1:2, N2) == q1(1:2,1));
 opti.subject_to(q2(3, N2) == q1(3,1) - 2*pi);
 
 opti.subject_to(q2_dot(3, :) <= 0);
@@ -205,10 +206,11 @@ N2_sim = length(t2_sim);
 
 t_span = [t1_span t2_span];
 z_soln = [z1_soln z2_soln];
+q_soln = [q1_soln q2_soln];
 % 
-% figure(3); clf; hold on;
-% title("Optimization animation");
-% animateBallTraj2(t_span, z_soln, params, dt1_soln, dt2_soln, N1, N2);
+figure(3); clf; hold on;
+title("Optimization animation");
+animateBallTraj2(t_span, z_soln, params, dt1_soln, dt2_soln, N1, N2);
 
 
 % % Interpolation schemes: {'nearest', 'linear', 'spline', 'pchip', 'cubic'}
@@ -220,7 +222,7 @@ for i = 1:N1_sim-1
     A = full(A_fn(z1_sim(:, i), params));
     b = full(b_fn(z1_sim(:, i), u1_out(:, i), params));
     Fc = contact_force(z1_sim(:, i)); % idk
-
+    % Fc = [0; 0; 0]; % comment this out?
     qdd = A\(b+Fc);
     z1_sim(4:6, i+1) = z1_sim(4:6, i) + qdd*dt_sim;
     z1_sim(1:3, i+1) = z1_sim(1:3,i) + z1_sim(4:6,i+1)*dt_sim;
@@ -234,7 +236,7 @@ for i = 1:N2_sim-1
     A = full(A_fn(z2_sim(:, i), params));
     b = full(b_fn(z2_sim(:, i), u2_out(:, i), params));
     Fc = contact_force(z2_sim(:, i));
-
+    % Fc = [0; 0; 0]; % comment this out?
     qdd = A\(b+Fc);
     z2_sim(4:6, i+1) = z2_sim(4:6, i) + qdd*dt_sim;
     z2_sim(1:3, i+1) = z2_sim(1:3,i) + z2_sim(4:6,i+1)*dt_sim;
@@ -242,10 +244,20 @@ end
 
 t_sim = [t1_sim t2_sim];
 z_sim = [z1_sim z2_sim];
-
+% 
 figure(4); clf; hold on;
 title("Simulation animation");
 animateBallerinaTrajectory(t_sim, z_sim, params, dt_sim);
+
+figure(1); clf; hold on;
+title("Joint trajectory");
+plot(t_span, q_soln(1, :), 'r--');
+plot(t_span, q_soln(2, :), 'b--');
+% plot(t_sim, z_sim(1, :), 'r-');
+% plot(t_sim, z_sim(2, :), 'b-');
+% legend('q_1_{opt}', 'q_2_{opt}', 'q_1_{sim}', 'q_2_{sim}');
+xlabel('Time (s)'); ylabel('q (rad)');
+
 
 %% [PLOTS]:
 % figure(1); clf; hold on;
