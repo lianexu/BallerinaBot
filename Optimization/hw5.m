@@ -117,13 +117,14 @@ opti.subject_to(q2(1:2,1) <= q_max);
 opti.subject_to(u2(:,1) >= tau_min); 
 opti.subject_to(u2(:,1) <= tau_max);
 
+
 for k = 1:N2 - 1
     z_k = [q2(:, k); q2_dot(:, k)];
     u_k = u2(:, k);
     qdd_k = A_fn(z_k, p) \ (b_fn(z_k, u_k, p));     % qdd = (M_inv) * (tau - C - G), our favorite equation
     opti.subject_to(q2_dot(:, k + 1) == q2_dot(:, k) + qdd_k * dt2);
     opti.subject_to(q2(:, k + 1) == q2(:, k) + q2_dot(:, k + 1) * dt2);
-
+    
     % Add in min/max state constraints here:
     opti.subject_to(q2(1:2,k+1) >= q_min);
     opti.subject_to(q2(1:2,k+1) <= q_max);
@@ -171,7 +172,7 @@ opts.ipopt.max_iter = 5000;
 opti.solver('ipopt', opts);
 
 %% [SET PARAMETER VALUES]:
-z_0 = [-pi/4; pi/2; 0; 0; 0; 0];
+z_0 = [pi/3; 0.3; 0; 0; 0; 0];
 opti.set_value(q1_0, z_0(1:3));
 opti.set_value(q1_dot_0, z_0(4:6));
 opti.set_value(p, params);
@@ -186,7 +187,8 @@ soln = opti.solve();
 q1_soln = soln.value(q1);
 q1_dot_soln = soln.value(q1_dot);
 z1_soln = [q1_soln; q1_dot_soln];
-u1_soln = soln.value(u1);
+zero_col = [0;0;0];
+u1_soln = [zero_col soln.value(u1)];
 dt1_soln = soln.value(dt1);
 
 q2_soln = soln.value(q2);
@@ -208,17 +210,17 @@ t_span = [t1_span t2_span];
 z_soln = [z1_soln z2_soln];
 q_soln = [q1_soln q2_soln];
 % 
-figure(3); clf; hold on;
-title("Discrete Animation");
-animateDiscreteBallerinaTrajectory(t_span, z_soln, params, dt1_soln, dt2_soln, N1, N2);
+% figure(3); clf; hold on;
+% title("Discrete Animation");
+% animateDiscreteBallerinaTrajectory(t_span, z_soln, params, dt1_soln, dt2_soln, N1, N2);
 
 
 % % Interpolation schemes: {'nearest', 'linear', 'spline', 'pchip', 'cubic'}
 u1_out = interpolateOptimizedControl(t1_span, u1_soln, t1_sim, 'spline');
-u1_out(:, end - floor(dt1_soln/dt_sim):end) = 0;
+% u1_out(:, end - floor(dt1_soln/dt_sim):end) = 0;
 z1_sim = zeros(6, N1_sim);
 z1_sim(:,1) = z_0;
-for i = 1:N1_sim-1
+for i = 1:N1_sim
     A = full(A_fn(z1_sim(:, i), params));
     b = full(b_fn(z1_sim(:, i), u1_out(:, i), params));
     Fc = contact_force(z1_sim(:, i)); % idk
@@ -228,11 +230,12 @@ for i = 1:N1_sim-1
     z1_sim(1:3, i+1) = z1_sim(1:3,i) + z1_sim(4:6,i+1)*dt_sim;
 end
 
-u2_out = interpolateOptimizedControl(t2_span, u2_soln, t2_sim, 'spline');
-u2_out(:, end - floor(dt2_soln/dt_sim):end) = 0;
+
+u2_out = interpolateOptimizedControl(t2_span(1:end-1), u2_soln, t2_sim, 'spline');
+u2_out(:, end - floor(dt2_soln/dt_sim):end) = 0; 
 z2_sim = zeros(6, N2_sim);
 z2_sim(:,1) = z2_soln(:,1);
-for i = 1:N2_sim-1
+for i = 1:N2_sim
     A = full(A_fn(z2_sim(:, i), params));
     b = full(b_fn(z2_sim(:, i), u2_out(:, i), params));
     Fc = contact_force(z2_sim(:, i));
@@ -245,9 +248,9 @@ end
 t_sim = [t1_sim t2_sim];
 z_sim = [z1_sim z2_sim];
 % 
-figure(4); clf; hold on;
-title("Continuous Animation");
-animateContinuousBallerinaTrajectory(t_sim, z_sim, params, dt_sim);
+% figure(4); clf; hold on;
+% title("Continuous Animation");
+% animateContinuousBallerinaTrajectory(t_sim, z_sim, params, dt_sim);
 
 figure(1); clf; hold on;
 title("Joint trajectory");
@@ -313,6 +316,8 @@ plot(t1, tau1_3, 'g.', 'DisplayName', 'τ₃ data');
 plot(t1, tau1_1_fit, 'r-', 'DisplayName', 'τ₁ fit');
 plot(t1, tau1_2_fit, 'b-', 'DisplayName', 'τ₂ fit');
 plot(t1, tau1_3_fit, 'g-', 'DisplayName', 'τ₃ fit');
+plot(t1_span(1:end), u1_soln(2, :),'-', 'DisplayName', '\tau_2_ish phase 1'); % DEBUG
+
 title('Phase 1 Polynomial Fits');
 xlabel('Time (s)');
 ylabel('Torque (Nm)');
@@ -327,6 +332,8 @@ plot(t2, tau2_3, 'g.', 'DisplayName', 'τ₃ data');
 plot(t2, tau2_1_fit, 'r-', 'DisplayName', 'τ₁ fit');
 plot(t2, tau2_2_fit, 'b-', 'DisplayName', 'τ₂ fit');
 plot(t2, tau2_3_fit, 'g-', 'DisplayName', 'τ₃ fit');
+plot(t2_span(1:end-1), u2_soln(2, :),'-', 'DisplayName', '\tau_2_ish phase 2', 'LineWidth', 2); % DEBUG
+
 title('Phase 2 Polynomial Fits');
 xlabel('Time (s)');
 ylabel('Torque (Nm)');
@@ -345,10 +352,20 @@ fprintf('τ₂: '); disp(p2_2);
 fprintf('τ₃: '); disp(p2_3);
 
 function [u_interp] = interpolateOptimizedControl(t_span, u_soln, t_sim, interp_scheme)
+    % u_interp = [interp1(t_span(1:end-1), u_soln(1, :), t_sim, interp_scheme);
+    %             interp1(t_span(1:end-1), u_soln(2, :), t_sim, interp_scheme);
+    %             interp1(t_span(1:end-1), u_soln(3, :), t_sim, interp_scheme)];
+     u_interp = [interp1(t_span(1:end), u_soln(1, :), t_sim, interp_scheme);
+                interp1(t_span(1:end), u_soln(2, :), t_sim, interp_scheme);
+                interp1(t_span(1:end), u_soln(3, :), t_sim, interp_scheme)];
+end
+
+function [u_interp] = interpolateOptimizedControl2(t_span, u_soln, t_sim, interp_scheme)
     u_interp = [interp1(t_span(1:end-1), u_soln(1, :), t_sim, interp_scheme);
                 interp1(t_span(1:end-1), u_soln(2, :), t_sim, interp_scheme);
                 interp1(t_span(1:end-1), u_soln(3, :), t_sim, interp_scheme)];
 end
+
 
 function dz = dynamics(z,u, p)
     % Get mass matrix
