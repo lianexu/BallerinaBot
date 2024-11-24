@@ -210,9 +210,9 @@ t_span = [t1_span t2_span];
 z_soln = [z1_soln z2_soln];
 q_soln = [q1_soln q2_soln];
 % 
-% figure(3); clf; hold on;
-% title("Discrete Animation");
-% animateDiscreteBallerinaTrajectory(t_span, z_soln, params, dt1_soln, dt2_soln, N1, N2);
+figure(3); clf; hold on;
+title("Discrete Animation");
+animateDiscreteBallerinaTrajectory(t_span, z_soln, params, dt1_soln, dt2_soln, N1, N2);
 
 
 % % Interpolation schemes: {'nearest', 'linear', 'spline', 'pchip', 'cubic'}
