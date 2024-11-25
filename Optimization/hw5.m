@@ -262,7 +262,145 @@ plot(t_span, q_soln(2, :), 'b--');
 xlabel('Time (s)'); ylabel('q (rad)');
 
 
-% Plot torque trajectory
+%% JOINT TRAJECTORIES
+t1 = t1_sim';
+q1_1 = z1_sim(1, 1:end-1)';
+q1_2 = z1_sim(2,1:end-1)';
+q1_3 = z1_sim(3,1:end-1)';
+
+p1_1 = polyfit(t1, q1_1, 5);
+p1_2 = polyfit(t1, q1_2, 5);
+p1_3 = polyfit(t1, q1_3, 5);
+q1_1_fit = polyval(p1_1, t1);
+q1_2_fit = polyval(p1_2, t1);
+q1_3_fit = polyval(p1_3, t1);
+
+t2 = t2_sim';
+q2_1 = z2_sim(1,1:end-1)';
+q2_2 = z2_sim(2,1:end-1)';
+q2_3 = z2_sim(3,1:end-1)';
+
+p2_1 = polyfit(t2, q2_1, 5);
+p2_2 = polyfit(t2, q2_2, 5);
+p2_3 = polyfit(t2, q2_3, 5);
+q2_1_fit = polyval(p2_1, t2);
+q2_2_fit = polyval(p2_2, t2);
+q2_3_fit = polyval(p2_3, t2);
+
+
+figure(7); clf;
+subplot(2,1,1);
+hold on;
+plot(t1, q1_1, 'r.', 'DisplayName', 'q₁ data');
+plot(t1, q1_2, 'b.', 'DisplayName', 'q₂ data');
+plot(t1, q1_3, 'g.', 'DisplayName', 'q₃ data');
+plot(t1, q1_1_fit, 'r-', 'DisplayName', 'q₁ fit');
+plot(t1, q1_2_fit, 'b-', 'DisplayName', 'q₂ fit');
+plot(t1, q1_3_fit, 'g-', 'DisplayName', 'q₃ fit');
+
+title('Q: Phase 1 Polynomial Fits');
+xlabel('Time (s)');
+ylabel('Angle');
+legend('show');
+grid on;
+
+subplot(2,1,2);
+hold on;
+plot(t2, q2_1, 'r.', 'DisplayName', 'q₁ data');
+plot(t2, q2_2, 'b.', 'DisplayName', 'q₂ data');
+plot(t2, q2_3, 'g.', 'DisplayName', 'q₃ data');
+plot(t2, q2_1_fit, 'r-', 'DisplayName', 'q₁ fit');
+plot(t2, q2_2_fit, 'b-', 'DisplayName', 'q₂ fit');
+plot(t2, q2_3_fit, 'g-', 'DisplayName', 'q₃ fit');
+
+title('Q: Phase 2 Polynomial Fits');
+xlabel('Time (s)');
+ylabel('Angle');
+legend('show');
+grid on;
+
+
+disp('Q: Phase 1 polynomial coefficients (highest order first):');
+fprintf('q₁: '); disp(p1_1);
+fprintf('q₂: '); disp(p1_2);
+fprintf('q₃: '); disp(p1_3);
+
+disp('Q: Phase 2 polynomial coefficients (highest order first):');
+fprintf('q₁: '); disp(p2_1);
+fprintf('q₂: '); disp(p2_2);
+fprintf('q₃: '); disp(p2_3);
+
+
+%% VELOCITY TRAJECTORIES
+t1 = t1_sim';
+q1_1 = z1_sim(4, 1:end-1)';
+q1_2 = z1_sim(5,1:end-1)';
+q1_3 = z1_sim(6,1:end-1)';
+
+p1_1 = polyfit(t1, q1_1, 5);
+p1_2 = polyfit(t1, q1_2, 5);
+p1_3 = polyfit(t1, q1_3, 5);
+q1_1_fit = polyval(p1_1, t1);
+q1_2_fit = polyval(p1_2, t1);
+q1_3_fit = polyval(p1_3, t1);
+
+t2 = t2_sim';
+q2_1 = z2_sim(4,1:end-1)';
+q2_2 = z2_sim(5,1:end-1)';
+q2_3 = z2_sim(6,1:end-1)';
+
+p2_1 = polyfit(t2, q2_1, 5);
+p2_2 = polyfit(t2, q2_2, 5);
+p2_3 = polyfit(t2, q2_3, 5);
+q2_1_fit = polyval(p2_1, t2);
+q2_2_fit = polyval(p2_2, t2);
+q2_3_fit = polyval(p2_3, t2);
+
+
+figure(8); clf;
+subplot(2,1,1);
+hold on;
+plot(t1, q1_1, 'r.', 'DisplayName', 'q₁ data');
+plot(t1, q1_2, 'b.', 'DisplayName', 'q₂ data');
+plot(t1, q1_3, 'g.', 'DisplayName', 'q₃ data');
+plot(t1, q1_1_fit, 'r-', 'DisplayName', 'q₁ fit');
+plot(t1, q1_2_fit, 'b-', 'DisplayName', 'q₂ fit');
+plot(t1, q1_3_fit, 'g-', 'DisplayName', 'q₃ fit');
+
+title('SPEED: Phase 1 Polynomial Fits');
+xlabel('Time (s)');
+ylabel('Speed');
+legend('show');
+grid on;
+
+subplot(2,1,2);
+hold on;
+plot(t2, q2_1, 'r.', 'DisplayName', 'q₁ data');
+plot(t2, q2_2, 'b.', 'DisplayName', 'q₂ data');
+plot(t2, q2_3, 'g.', 'DisplayName', 'q₃ data');
+plot(t2, q2_1_fit, 'r-', 'DisplayName', 'q₁ fit');
+plot(t2, q2_2_fit, 'b-', 'DisplayName', 'q₂ fit');
+plot(t2, q2_3_fit, 'g-', 'DisplayName', 'q₃ fit');
+
+title('SPEED: Phase 2 Polynomial Fits');
+xlabel('Time (s)');
+ylabel('Speed');
+legend('show');
+grid on;
+
+disp('SPEED: Phase 1 polynomial coefficients (highest order first):');
+fprintf('w₁: '); disp(p1_1);
+fprintf('w₂: '); disp(p1_2);
+fprintf('w₃: '); disp(p1_3);
+
+disp('SPEED: Phase 2 polynomial coefficients (highest order first):');
+fprintf('w₁: '); disp(p2_1);
+fprintf('w₂: '); disp(p2_2);
+fprintf('w₃: '); disp(p2_3);
+
+
+
+%% Plot torque trajectory
 figure(2); clf; hold on;
 title("Torque trajectory");
 % Phase 1

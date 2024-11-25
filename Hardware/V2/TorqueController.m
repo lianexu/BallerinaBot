@@ -24,8 +24,8 @@ pts_torque3 = zeros(num_points);
 % end
         
 % Initial leg angles for encoder resets (negative of q1,q2 in lab handout due to direction motors are mounted)
-angle1_init = -1.40848; % -0.581194; %-1.20428; 1.40848;
-angle2_init = -0.1; %-0.780162; 
+angle1_init = -pi/3; % -1.40848; % -0.581194; %-1.20428; 1.40848;
+angle2_init = -0.3; %-0.780162; 
 angle3_init = 0;
 
 % Total experiment time is buffer,trajectory,buffer
