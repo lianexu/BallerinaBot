@@ -1,7 +1,18 @@
 % goes with 274-final-V1
 
-function output_data = RunTrajectoryExperiment( angle1_init, angle2_init, angle3_init, pts_torque1, pts_torque2, pts_torque3, traj_time, pre_buffer_time, post_buffer_time, duty_max, Kp_body, Kd_body, Ki_body)
+function output_data = RunTrajectoryExperiment( ...
+    traj_time, pre_buffer_time, post_buffer_time, duty_max, ...
+    angle1_init, angle2_init, angle3_init,...
+    K1_pos, K2_pos, K3_pos, ...
+    D1_vel, D2_vel, D3_vel, ...
+    tau1_weight, tau2_weight, tau3_weight, ...
+    K3_brake, D3_brake, I3_brake, ...
+    fric_comp_torque, deadzone_radius, ...
+    boost_torque, boost_duration, ...
+    phase1_playback_speed, phase2_playback_speed)
     
+    
+
     % Figure for plotting motor data
     figure(1);  clf;       
     a1 = subplot(421);
@@ -211,11 +222,15 @@ function output_data = RunTrajectoryExperiment( angle1_init, angle2_init, angle3
     end_period                  = post_buffer_time;   % In seconds
     
     % Specify inputs
-    input = [start_period traj_time end_period];
+    input = [start_period traj_time end_period duty_max];
     input = [input angle1_init angle2_init angle3_init];
-    input = [input duty_max Kp_body];
-    input = [input pts_torque1(:)' pts_torque2(:)' pts_torque3(:)']; % final size of input should be 28x1
-    input = [input Kd_body Ki_body];
+    input = [input K1_pos K2_pos K3_pos];
+    input = [input D1_vel D2_vel D3_vel];
+    input = [input tau1_weight tau2_weight tau3_weight];
+    input = [input K3_brake D3_brake I3_brake];
+    input = [input fric_comp_torque deadzone_radius];
+    input = [input boost_torque boost_duration];
+    input = [input phase1_playback_speed phase2_playback_speed];
     
     params.timeout  = (start_period+traj_time+end_period);  
     
