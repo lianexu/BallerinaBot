@@ -29,7 +29,7 @@ tau2_weight = 1.0;
 tau3_weight = 1.0;
 
 % faster, current control loop. For braking (motor 3)
-K3_brake = 20;
+K3_brake = 30;
 D3_brake = 100;
 I3_brake = 0.02;
 
@@ -43,7 +43,7 @@ boost_duration = 0.1;
 
 % playback speed of trajectory (speed = 3.0 means the trajectory is played back 3 times slower)
 phase1_playback_speed = 3.0;
-phase2_playack_speed = 1.0;
+phase2_playback_speed = 3.0;
 
 %% Run Experiment
 [output_data] = RunTrajectoryExperiment(traj_time, pre_buffer_time, post_buffer_time, duty_max, ...
