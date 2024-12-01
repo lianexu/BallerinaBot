@@ -1,6 +1,6 @@
 % goes with 274-final-V1
 
-function output_data = RunTrajectoryExperiment( angle1_init, angle2_init, angle3_init, pts_torque1, pts_torque2, pts_torque3, traj_time, pre_buffer_time, post_buffer_time, duty_max, torque_control_period)
+function output_data = RunTrajectoryExperiment( angle1_init, angle2_init, angle3_init, pts_torque1, pts_torque2, pts_torque3, traj_time, pre_buffer_time, post_buffer_time, duty_max, Kp_body, Kd_body, Ki_body)
     
     % Figure for plotting motor data
     figure(1);  clf;       
@@ -92,6 +92,8 @@ function output_data = RunTrajectoryExperiment( angle1_init, angle2_init, angle3
     h_BD = plot([0],[0],'LineWidth',2);
     h_CE = plot([0],[0],'LineWidth',2);
     hip_motor = plot([0],[0], 'LineWidth', 3);
+    % limits1 =  plot([0],[0], 'LineWidth', 2, 'LineStyle',':', 'Color', 'r'); % draw the hardware limits in red
+    % limits2 =  plot([0],[0], 'LineWidth', 2, 'LineStyle', ':', 'Color', 'r'); % draw the hardware limits in red
 
     
     % Define leg length parameters
@@ -138,7 +140,7 @@ function output_data = RunTrajectoryExperiment( angle1_init, angle2_init, angle3
         
         % Update motor data plots
         h1.XData(end+1:end+N) = t;   
-        h1.YData(end+1:end+N) = -pos1; % switch sign on all plotted values due to direction motors are mounted
+        h1.YData(end+1:end+N) = pos1; % switch sign on all plotted values due to direction motors are mounted
         % h2.XData(end+1:end+N) = t;   
         % h2.YData(end+1:end+N) = -vel1;
         % h3.XData(end+1:end+N) = t;   
@@ -149,7 +151,7 @@ function output_data = RunTrajectoryExperiment( angle1_init, angle2_init, angle3
         % h5.YData(end+1:end+N) = -duty1;
         
         h21.XData(end+1:end+N) = t;   
-        h21.YData(end+1:end+N) = -pos2;
+        h21.YData(end+1:end+N) = pos2;
         % h22.XData(end+1:end+N) = t;   
         % h22.YData(end+1:end+N) = -vel2;
         % h23.XData(end+1:end+N) = t;   
@@ -160,7 +162,7 @@ function output_data = RunTrajectoryExperiment( angle1_init, angle2_init, angle3
         % h25.YData(end+1:end+N) = -duty2;
 
         h31.XData(end+1:end+N) = t;   
-        h31.YData(end+1:end+N) = -pos3;
+        h31.YData(end+1:end+N) = pos3;
         % h32.XData(end+1:end+N) = t;   
         % h32.YData(end+1:end+N) = -vel3;
         % h33.XData(end+1:end+N) = t;   
@@ -171,7 +173,7 @@ function output_data = RunTrajectoryExperiment( angle1_init, angle2_init, angle3
         % h35.YData(end+1:end+N) = -duty3;
         
         % Calculate leg state and update plots
-        z = [pos1(end) pos2(end) pos3(end) vel1(end) vel2(end) vel3(end)]';
+        z = [-pos1(end) -pos2(end) -pos3(end) -vel1(end) -vel2(end) -vel3(end)]';
         keypoints = keypoints_ballerina(z,p);
         
         % TODO: could also plot Jacobian, control force vector here?
@@ -187,7 +189,15 @@ function output_data = RunTrajectoryExperiment( angle1_init, angle2_init, angle3
         set(h_AC,'XData',[rA(1) rC(1)],'YData',[rA(2) rC(2)]);
         set(h_BD,'XData',[rB(1) rD(1)],'YData',[rB(2) rD(2)]);
         set(h_CE,'XData',[rC(1) rE(1)],'YData',[rC(2) rE(2)]);
-        set(hip_motor,'XData',[-0.05*cos(th3) 0.05*cos(th3)],'YData',[-0.05*sin(th3) 0.05*sin(th3)]);
+
+        % set(limits1,'XData',[0 0.05*sin(th3-pi/2)]);
+        % set(limits1,'YData',[0 -0.05*cos(th3-pi/2)]);
+        % 
+        % set(limits2,'XData',[0 0.05*sin(th3+pi/3)]);
+        % set(limits2,'YData',[0 -0.05*cos(th3+pi/3)]);
+        % 
+        set(hip_motor,'XData',[0 0.05*sin(th3)]);
+        set(hip_motor,'YData',[0 -0.05*cos(th3)]);
         
     end
     
@@ -203,8 +213,9 @@ function output_data = RunTrajectoryExperiment( angle1_init, angle2_init, angle3
     % Specify inputs
     input = [start_period traj_time end_period];
     input = [input angle1_init angle2_init angle3_init];
-    input = [input duty_max torque_control_period];
+    input = [input duty_max Kp_body];
     input = [input pts_torque1(:)' pts_torque2(:)' pts_torque3(:)']; % final size of input should be 28x1
+    input = [input Kd_body Ki_body];
     
     params.timeout  = (start_period+traj_time+end_period);  
     
