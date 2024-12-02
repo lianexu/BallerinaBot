@@ -105,7 +105,7 @@ end
 %%% Phase 2 constraints
 opti.subject_to(q2(:, 1) == q1(:,N1));
 opti.subject_to(q2_dot(:, 1) == q1_dot(:,N1));
-% opti.subject_to(q2(1:2, N2) == q1(1:2,1));
+opti.subject_to(q2(1:2, N2) == q1(1:2,1));
 opti.subject_to(q2(3, N2) == q1(3,1) - 2*pi);
 
 opti.subject_to(q2_dot(3, 2:end) <= 0);
@@ -531,7 +531,7 @@ function Fc = contact_force(z)  %same thing as the joint_limit_torque
 % turn this into the joint limit, rather than a y-coordinate limit
 
     %% Fixed parameters for contact
-    K_c = 10;
+    K_c = 100;
     D_c = 0.5;
     
     theta_1 = z(1); % hip 
