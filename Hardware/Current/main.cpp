@@ -175,7 +175,7 @@ void CurrentLoop() {
     prev_current_des2 = current_des2; 
 
     
-    if (t.read() < (T1*phase1_playback_speed-0.1)){  // changed from t.read() < T1
+    if (t.read() < (T1*phase1_playback_speed-0.1)){ 
         float angle_3_error = angle3_init - angle3;
         angle_3_error = angle3_init - angle3;
         angle_3_cum += angle_3_error;
@@ -270,30 +270,30 @@ int main(void) {
     // Continually get input from MATLAB and run experiments
     float input_params[NUM_INPUTS];
 
-     // optimization output fit parameters
-    float tau1_1_params[6] = { 4.4395 ,  -1.7283 ,   0.2363 ,  -0.0134 ,   0.0003 ,  -0.0000};
-    float tau2_1_params[6] = {-2.6979  ,  1.4597 ,  -0.2795  ,  0.0260   -0.0013 ,   0.0000};
-    float tau3_1_params[6] = {0.3874  ,  1.3308 ,  -0.4641,    0.0572,   -0.0032 ,  -0.0000};
+    // optimization output fit parameters
+    float tau1_1_params[6] = { 4.4237,   -1.7299,    0.2376 ,  -0.0135  ,  0.0003 ,  -0.0000};
+    float tau2_1_params[6] = {-3.0138 ,   1.5791 ,  -0.2952 ,   0.0268 ,  -0.0013 ,   0.0000};
+    float tau3_1_params[6] = { -0.6592,    1.7183 ,  -0.5141  ,  0.0598 ,  -0.0033 ,  -0.0000};
 
-    float tau1_2_params[6] = { 3.8199 ,  -5.8710  ,  3.5071 ,  -1.0193  ,  0.1443 ,  -0.0079};
-    float tau2_2_params[6] = { -1.3484 ,   2.1431 ,  -1.3236 ,   0.3964 ,  -0.0576 ,   0.0033};
-    float tau3_2_params[6] = {0.2344 ,  -0.3579 ,   0.2117,   -0.0606 ,   0.0084  , -0.0005};
-    
-    float pos1_1_params[6] = {-3.5955,   -0.6761 ,   0.4986 ,  -0.0924 ,  -0.0009 ,   0.0011};
-    float pos2_1_params[6] = {3.2381 ,   7.0721 ,  -2.3780 ,   0.1760 ,   0.0012,    0.0003};
-    float pos3_1_params[6] = {-0.0697 ,  -1.0782 ,   0.2871 ,  -0.0217 ,   0.0005,   -0.0000};
+    float tau1_2_params[6] = {-3.7940  ,  5.8671 ,  -3.4918 ,   0.9967  , -0.1365 ,   0.0073};
+    float tau2_2_params[6] = {-3.7343 ,   6.2641 ,  -4.0279 ,   1.2372  , -0.1821 ,   0.0104};
+    float tau3_2_params[6] = { 0.2933 ,  -0.5147 ,   0.3507 ,  -0.1150  ,  0.0179 ,  -0.0010};
 
-    float pos1_2_params[6] = {-2.1824 ,   3.2466 ,  -1.8799 ,   0.5396 ,  -0.0783 ,   0.0045};
-    float pos2_2_params[6] = {1.8082 ,  -2.5257 ,   1.3114,   -0.3148 ,   0.0359 ,  -0.0016};
-    float pos3_2_params[6] = {-1.4201 ,   2.8376 ,  -1.8268 ,   0.4240 ,  -0.0359 ,   0.0006};
+    float pos1_1_params[6] = {-0.4770 ,  -2.0494 ,   0.7029 ,  -0.1047 ,  -0.0007 ,   0.0011};
+    float pos2_1_params[6] = {-1.1277 ,   1.3398 ,  -0.3313 ,   0.0232 ,  -0.0000 ,   0.0000};
+    float pos3_1_params[6] = { 2.9899 ,  -2.4196 ,   0.4864 ,  -0.0337 ,   0.0008 ,  -0.0000};
 
-    float vel1_1_params[6] = {2.1848 ,  -0.7633 ,  -0.0097  ,  0.0207 ,  -0.0023 ,  -0.0000};
-    float vel2_1_params[6] = {-1.5912 ,   0.6240 ,  -0.0500 ,  -0.0034  ,  0.0003 ,   0.0000};
-    float vel3_1_params[6] = {8.5866 ,  -3.7114  ,  0.5330 ,  -0.0301 ,   0.0006 ,  -0.0000};
+    float pos1_2_params[6] = { -1.4168 ,   2.2635,   -1.4276 ,   0.4524,   -0.0727,    0.0046};
+    float pos2_2_params[6] = {1.5580 ,  -2.2572 ,   1.2173,   -0.3070 ,   0.0377,   -0.0018};
+    float pos3_2_params[6] = { -1.4436 ,   2.2497,   -0.9807 ,   0.0071 ,   0.0495 ,  -0.0056};
 
-    float vel1_2_params[6] = { -3.5492  ,  4.8072 ,  -2.5503,    0.6673,   -0.0850 ,   0.0040};
-    float vel2_2_params[6] = {  -0.8185 ,   1.3868 ,  -0.9064  ,  0.2844  , -0.0428 ,   0.0025};
-    float vel3_2_params[6] = { 3.8684 ,  -6.2281  ,  3.9582,   -1.2311 ,   0.1847  , -0.0107};
+    float vel1_1_params[6] = {4.0636 ,  -1.4882  ,  0.0851  ,  0.0157  , -0.0022 ,  -0.0000};
+    float vel2_1_params[6] = { -2.2409 ,   0.8660,   -0.0800 ,  -0.0019 ,   0.0003 ,   0.0000};
+    float vel3_1_params[6] = {9.5558  , -4.0615  ,  0.5735 ,  -0.0318 ,   0.0006 ,  -0.0000};
+
+    float vel1_2_params[6] = { -4.9749  ,  7.9174 ,  -4.9585 ,   1.5226,   -0.2267 ,   0.0129};
+    float vel2_2_params[6] = { 0.4790 ,   7.0739  , -8.6353  ,  3.5547 ,  -0.6037  ,  0.0373};
+    float vel3_2_params[6] = {1.9053 ,  -3.3990  ,  2.3680 ,  -0.7929  ,  0.1252 ,  -0.0075};
 
     
     for (int i = 0; i < 6; ++i) { 
@@ -301,11 +301,11 @@ int main(void) {
         tau2_1_params[i] *= float(pow(10,5)); 
         tau3_1_params[i] *= float(pow(10,4)); 
         tau1_2_params[i] *= float(pow(10,4)); 
-        tau2_2_params[i] *= float(pow(10,5)); 
-        tau3_2_params[i] *= float(pow(10,-18)); 
+        tau2_2_params[i] *= float(pow(10,4)); 
+        tau3_2_params[i] *= float(pow(10,-13)); 
 
         pos1_1_params[i] *= float(pow(10, 3));
-        pos2_1_params[i] *= float(pow(10, 3));
+        pos2_1_params[i] *= float(pow(10, 4));
         pos3_1_params[i] *= float(pow(10, 3));
         pos1_2_params[i] *= float(pow(10, 4));
         pos2_2_params[i] *= float(pow(10, 4));
@@ -315,13 +315,13 @@ int main(void) {
         vel2_1_params[i] *= float(pow(10, 6));
         vel3_1_params[i] *= float(pow(10, 5));
         vel1_2_params[i] *= float(pow(10, 5));
-        vel2_2_params[i] *= float(pow(10, 6));
+        vel2_2_params[i] *= float(pow(10, 4));
         vel3_2_params[i] *= float(pow(10, 5));
     } 
 
     T1 = 0.18; // original time
-    T2 = 0.289; // original time
-    T3 = 1.0; //additional time to spin
+    T2 = 0.31727828827; // original time
+    T3 = 0.0; // 1.0; //additional time to spin
     
     pc.printf("about to enter while loop \n");
     while(1) {
@@ -434,7 +434,7 @@ int main(void) {
                 //     vel2_des = get_vel_val(time, vel2_2_params);
                 //     vel3_des = get_vel_val(time, vel3_2_params);
 
-                } else if (time < (T1*phase1_playback_speed)+T2) {
+                } else if (time < (T1*phase1_playback_speed)+(T2*phase2_playack_speed)) {
                     time = (time - (T1*phase1_playback_speed))/phase2_playack_speed + T1;
                     
                     tau1 = get_val(time, tau1_2_params);

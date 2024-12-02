@@ -7,7 +7,7 @@ pre_buffer_time   = 2; % this should be 0 for constant points, 2 for Bezier traj
 post_buffer_time  = 2;
 
 % Maximum duty cycle commanded by controller (should always be <=1.0)
-duty_max   = 0.4; 
+duty_max   = 0.6; 
 
 % Initial leg angles for encoder resets (negative of q1,q2 in lab handout due to direction motors are mounted)
 angle1_init = -pi/3; 
@@ -17,7 +17,7 @@ angle3_init = 0;
 % outer pos, vel, torque FB loop
 K1_pos = 20.0;
 K2_pos = 20.0; 
-K3_pos = 0.0; %20.0;
+K3_pos = 20.0; %20.0;
 
 D1_vel = 0.0;
 D2_vel = 0.0;
@@ -34,15 +34,15 @@ I3_brake = 0.02;
 
 % friction comp
 fric_comp_torque = 0.030;
-deadzone_radius = 0.1cv ;
+deadzone_radius = 0.3;
 
 % boost from foot
 boost_torque = 5.0;
 boost_duration = 0.1;
 
 % playback speed of trajectory (speed = 3.0 means the trajectory is played back 3 times slower)
-phase1_playback_speed = 3.0;
-phase2_playback_speed = 1.0; %3.0;
+phase1_playback_speed = 2.75;
+phase2_playback_speed = 3.0; %3.0;
 
 %% Run Experiment
 [output_data] = RunTrajectoryExperiment(traj_time, pre_buffer_time, post_buffer_time, duty_max, ...
