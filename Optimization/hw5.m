@@ -108,7 +108,7 @@ opti.subject_to(q2_dot(:, 1) == q1_dot(:,N1));
 % opti.subject_to(q2(1:2, N2) == q1(1:2,1));
 opti.subject_to(q2(3, N2) == q1(3,1) - 2*pi);
 
-opti.subject_to(q2_dot(3, :) <= 0);
+opti.subject_to(q2_dot(3, 2:end) <= 0);
 
 opti.subject_to(u2(3, :) == 0); % Body torque all 0 for phase 2
 
@@ -236,7 +236,7 @@ end
 u2_out = interpolateOptimizedControl(t2_span(1:end-1), u2_soln, t2_sim, 'spline');
 u2_out(:, end - floor(dt2_soln/dt_sim):end) = 0; 
 z2_sim = zeros(6, N2_sim);
-z2_sim(:,1) = z2_soln(:,1);
+z2_sim(:,1) = z1_sim(:,end);
 for i = 1:N2_sim
     A = full(A_fn(z2_sim(:, i), params));
     b = full(b_fn(z2_sim(:, i), u2_out(:, i), params));
@@ -250,9 +250,9 @@ end
 t_sim = [t1_sim t2_sim];
 z_sim = [z1_sim z2_sim];
 % 
-% figure(4); clf; hold on;
-% title("Continuous Animation");
-% animateContinuousBallerinaTrajectory(t_sim, z_sim, params, dt_sim);
+figure(4); clf; hold on;
+title("Continuous Animation");
+animateContinuousBallerinaTrajectory(t_sim, z_sim, params, dt_sim);
 
 figure(1); clf; hold on;
 title("Joint trajectory");
