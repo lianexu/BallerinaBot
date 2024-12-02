@@ -202,7 +202,7 @@ t2_span = (N1-1)*dt1_soln:dt2_soln:(N2-1)*dt2_soln + (N1-1)*dt1_soln;
 
 dt_sim = 0.001;
 t1_sim = 0:dt_sim:t1_span(end);
-t2_sim = t1_span(end):dt_sim:t2_span(end)+t1_span(end);
+t2_sim = t2_span(1):dt_sim:t2_span(end);
 N1_sim = length(t1_sim);
 N2_sim = length(t2_sim);
 
@@ -210,9 +210,9 @@ t_span = [t1_span t2_span];
 z_soln = [z1_soln z2_soln];
 q_soln = [q1_soln q2_soln];
 % 
-figure(3); clf; hold on;
-title("Discrete Animation");
-animateDiscreteBallerinaTrajectory(t_span, z_soln, params, dt1_soln, dt2_soln, N1, N2);
+% figure(3); clf; hold on;
+% title("Discrete Animation");
+% animateDiscreteBallerinaTrajectory(t_span, z_soln, params, dt1_soln, dt2_soln, N1, N2);
 
 
 % % Interpolation schemes: {'nearest', 'linear', 'spline', 'pchip', 'cubic'}
@@ -232,7 +232,7 @@ end
 
 
 u2_out = interpolateOptimizedControl(t2_span(1:end-1), u2_soln, t2_sim, 'spline');
-u2_out(:, end - floor(dt2_soln/dt_sim):end) = 0; 
+% u2_out(:, end - floor(dt2_soln/dt_sim):end) = 0; 
 z2_sim = zeros(6, N2_sim);
 z2_sim(:,1) = z2_soln(:,1);
 for i = 1:N2_sim
@@ -470,6 +470,7 @@ plot(t2, tau2_3, 'g.', 'DisplayName', 'τ₃ data');
 plot(t2, tau2_1_fit, 'r-', 'DisplayName', 'τ₁ fit');
 plot(t2, tau2_2_fit, 'b-', 'DisplayName', 'τ₂ fit');
 plot(t2, tau2_3_fit, 'g-', 'DisplayName', 'τ₃ fit');
+% plot(t2_span(1:end-1), u2_soln(2, :),'-', 'DisplayName', '\tau_2_ish phase 2', 'LineWidth', 2); % DEBUG
 plot(t2_span(1:end-1), u2_soln(2, :),'-', 'DisplayName', '\tau_2_ish phase 2', 'LineWidth', 2); % DEBUG
 
 title('Phase 2 Polynomial Fits');
