@@ -9,7 +9,7 @@ setupHW5();
 % The syntax is similar to MATLAB's symbolic toolbox you've been using for past homeworks, 
 % but it's much more powerful and expressive for us to formulate optimizations.
 
-% For this homework, we're going to optimize the trajectories of the leg you've been using for lab.
+% For this homework, we're going to optimize the trajectories of the leyou've been using for lab.
 % You only need to work in this file, but look at setupHW5.m to familiarize yourself with how 
 % we are building the dynamics of the leg, setting parameters, and adding libraries.
 
@@ -283,9 +283,9 @@ tau1_1 = u1_out(1,:)';
 tau1_2 = u1_out(2,:)';
 tau1_3 = u1_out(3,:)';
 
-p1_1 = polyfit(t1, tau1_1, 6);
-p1_2 = polyfit(t1, tau1_2, 6);
-p1_3 = polyfit(t1, tau1_3, 6);
+p1_1 = polyfit(t1, tau1_1, 10);
+p1_2 = polyfit(t1, tau1_2, 10);
+p1_3 = polyfit(t1, tau1_3, 10);
 tau1_1_fit = polyval(p1_1, t1);
 tau1_2_fit = polyval(p1_2, t1);
 tau1_3_fit = polyval(p1_3, t1);
@@ -296,9 +296,9 @@ tau2_1 = u2_out(1,:)';
 tau2_2 = u2_out(2,:)';
 tau2_3 = u2_out(3,:)';
 
-p2_1 = polyfit(t2, tau2_1, 6);
-p2_2 = polyfit(t2, tau2_2, 6);
-p2_3 = polyfit(t2, tau2_3, 6);
+p2_1 = polyfit(t2, tau2_1, 10);
+p2_2 = polyfit(t2, tau2_2, 10);
+p2_3 = polyfit(t2, tau2_3, 10);
 tau2_1_fit = polyval(p2_1, t2);
 tau2_2_fit = polyval(p2_2, t2);
 tau2_3_fit = polyval(p2_3, t2);
@@ -343,17 +343,6 @@ disp('Phase 2 polynomial coefficients (highest order first):');
 fprintf('τ₁: '); disp(p2_1);
 fprintf('τ₂: '); disp(p2_2);
 fprintf('τ₃: '); disp(p2_3);
-
-phase1_data = table(t1, tau1_1, tau1_2, tau1_3, tau1_1_fit, tau1_2_fit, tau1_3_fit, ...
-    'VariableNames', {'Time', 'Tau1_Raw', 'Tau2_Raw', 'Tau3_Raw', ...
-                      'Tau1_Fit', 'Tau2_Fit', 'Tau3_Fit'});
-writetable(phase1_data, 'phase1_torques.csv');
-
-phase2_data = table(t2, tau2_1, tau2_2, tau2_3, tau2_1_fit, tau2_2_fit, tau2_3_fit, ...
-    'VariableNames', {'Time', 'Tau1_Raw', 'Tau2_Raw', 'Tau3_Raw', ...
-                      'Tau1_Fit', 'Tau2_Fit', 'Tau3_Fit'});
-writetable(phase2_data, 'phase2_torques.csv');
-
 
 function [u_interp] = interpolateOptimizedControl(t_span, u_soln, t_sim, interp_scheme)
     u_interp = [interp1(t_span(1:end-1), u_soln(1, :), t_sim, interp_scheme);
