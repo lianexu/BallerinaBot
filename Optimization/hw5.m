@@ -187,8 +187,8 @@ soln = opti.solve();
 q1_soln = soln.value(q1);
 q1_dot_soln = soln.value(q1_dot);
 z1_soln = [q1_soln; q1_dot_soln];
-zero_col = [0;0;0];
-u1_soln = [zero_col soln.value(u1)];
+% zero_col = [0;0;0];
+u1_soln = soln.value(u1);
 dt1_soln = soln.value(dt1);
 
 q2_soln = soln.value(q2);
@@ -196,6 +196,8 @@ q2_dot_soln = soln.value(q2_dot);
 z2_soln = [q2_soln; q2_dot_soln];
 u2_soln = soln.value(u2);
 dt2_soln = soln.value(dt2);
+
+u1_soln = [u1_soln u2_soln(:,1)]; % *** attach last col of u2 to u1 ***
 
 t1_span = 0:dt1_soln:(N1-1)*dt1_soln;
 t2_span = (N1-1)*dt1_soln:dt2_soln:(N2-1)*dt2_soln + (N1-1)*dt1_soln;
@@ -232,7 +234,7 @@ end
 
 
 u2_out = interpolateOptimizedControl(t2_span(1:end-1), u2_soln, t2_sim, 'spline');
-% u2_out(:, end - floor(dt2_soln/dt_sim):end) = 0; 
+u2_out(:, end - floor(dt2_soln/dt_sim):end) = 0; 
 z2_sim = zeros(6, N2_sim);
 z2_sim(:,1) = z2_soln(:,1);
 for i = 1:N2_sim
@@ -454,7 +456,7 @@ plot(t1, tau1_3, 'g.', 'DisplayName', 'τ₃ data');
 plot(t1, tau1_1_fit, 'r-', 'DisplayName', 'τ₁ fit');
 plot(t1, tau1_2_fit, 'b-', 'DisplayName', 'τ₂ fit');
 plot(t1, tau1_3_fit, 'g-', 'DisplayName', 'τ₃ fit');
-plot(t1_span(1:end), u1_soln(2, :),'-', 'DisplayName', '\tau_2_ish phase 1'); % DEBUG
+plot(t1_span, u1_soln(2, :),'-', 'DisplayName', '\tau_2_{opt} phase 1', 'LineWidth', 2); % DEBUG
 
 title('Phase 1 Polynomial Fits');
 xlabel('Time (s)');
@@ -470,8 +472,7 @@ plot(t2, tau2_3, 'g.', 'DisplayName', 'τ₃ data');
 plot(t2, tau2_1_fit, 'r-', 'DisplayName', 'τ₁ fit');
 plot(t2, tau2_2_fit, 'b-', 'DisplayName', 'τ₂ fit');
 plot(t2, tau2_3_fit, 'g-', 'DisplayName', 'τ₃ fit');
-% plot(t2_span(1:end-1), u2_soln(2, :),'-', 'DisplayName', '\tau_2_ish phase 2', 'LineWidth', 2); % DEBUG
-plot(t2_span(1:end-1), u2_soln(2, :),'-', 'DisplayName', '\tau_2_ish phase 2', 'LineWidth', 2); % DEBUG
+plot(t2_span(1:end-1), u2_soln(2, :),'-', 'DisplayName', '\tau_2_{opt} phase 2', 'LineWidth', 2); % DEBUG
 
 title('Phase 2 Polynomial Fits');
 xlabel('Time (s)');
