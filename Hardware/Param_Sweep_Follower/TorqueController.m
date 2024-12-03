@@ -8,7 +8,7 @@ pre_buffer_time   = 2; % this should be 0 for constant points, 2 for Bezier traj
 post_buffer_time  = 2;
 
 % Maximum duty cycle commanded by controller (should always be <=1.0)
-duty_max   = 0.6; 
+duty_max   = 0.65; 
 
 % Initial leg angles for encoder resets (negative of q1,q2 in lab handout due to direction motors are mounted)
 angle1_init = -pi/3; 
@@ -24,8 +24,8 @@ D1_vel = 0.0;
 D2_vel = 0.0;
 D3_vel = 0.0; %2.0;
 
-tau1_weight = 1.0;
-tau2_weight = 1.0;
+tau1_weight = 3.0;
+tau2_weight = 0.75;
 tau3_weight = 0.0; %1.0;
 
 % faster, current control loop. For braking (motor 3)
@@ -34,8 +34,8 @@ D3_brake = 100;
 I3_brake = 0.02;
 
 % friction comp
-fric_comp_torque = 0.030;
-deadzone_radius = 0.3;
+deadzone_radius = 0.3; % set < 0 to turn off friction comp
+fric_comp_torque = 0.030; 
 
 % boost from foot
 boost_torque = 5.0;
@@ -72,7 +72,7 @@ dcur2 = -output_data(:,10);     % desired current
 duty2 = -output_data(:,11);     % command
 
 pos3 = output_data(:,12);       % position
-vel3 = -output_data(:,13);       % velocity
+vel3 = output_data(:,13);       % velocity
 cur3 = -output_data(:,14);       % current
 dcur3 = -output_data(:,15);     % desired current
 duty3 = -output_data(:,16);     % command  
@@ -91,4 +91,69 @@ tau3 = output_data(:,25);
 
 
 %% Display / save the run
-figure
+
+% Positions
+figure(1);
+clf;
+subplot(3,1,1);
+hold on
+title('Pos1');
+xlabel('Time (s)');
+ylabel('Position (rad)');
+legend('show');
+grid on;
+plot(t, pos1, 'r.', 'DisplayName', 'pos1');
+plot(t, pos1_des, 'b-', 'DisplayName', 'pos1_{des}');
+
+subplot(3,1,2);
+hold on
+title('Pos2');
+xlabel('Time (s)');
+ylabel('Position (rad)');
+legend('show');
+grid on;
+plot(t, pos2, 'r.', 'DisplayName', 'pos2');
+plot(t, pos2_des, 'b-', 'DisplayName', 'pos2_{des}');
+
+subplot(3,1,3);
+hold on
+title('Pos3');
+xlabel('Time (s)');
+ylabel('Position (rad)');
+legend('show');
+grid on;
+plot(t, pos3, 'r.', 'DisplayName', 'pos3');
+plot(t, pos3_des, 'b-', 'DisplayName', 'pos3_{des}');
+
+
+figure(2);
+clf;
+subplot(3,1,1);
+hold on
+title('Vel1');
+xlabel('Time (s)');
+ylabel('Position (rad)');
+legend('show');
+grid on;
+plot(t, vel1, 'r.', 'DisplayName', 'vel1');
+plot(t, vel1_des, 'b.', 'DisplayName', 'vel1_{des}');
+
+subplot(3,1,2);
+hold on
+title('Vel2');
+xlabel('Time (s)');
+ylabel('Position (rad)');
+legend('show');
+grid on;
+plot(t, vel2, 'r.', 'DisplayName', 'vel2');
+plot(t, vel2_des, 'b.', 'DisplayName', 'vel2_{des}');
+
+subplot(3,1,3);
+hold on
+title('Vel3');
+xlabel('Time (s)');
+ylabel('Position (rad)');
+legend('show');
+grid on;
+plot(t, vel3, 'r.', 'DisplayName', 'vel3');
+plot(t, vel3_des, 'b.', 'DisplayName', 'vel3_{des}');

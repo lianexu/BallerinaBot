@@ -150,16 +150,18 @@ function output_data = RunTrajectoryExperiment( ...
         dcur3 = new_data(:,15);     % desired current
         duty3 = new_data(:,16);     % command  
 
-        % // optimization values
-        % // output_data[16] = pos1_des;
-        % // output_data[17] = pos2_des;
-        % // output_data[18] = pos3_des;
-        % // output_data[19] = vel1_des;
-        % // output_data[20] = vel2_des;
-        % // output_data[21] = vel3_des;
-        % // output_data[16] = tau1;
-        % // output_data[17] = tau2;
-        % // output_data[18] = tau3;
+        pos1_des = new_data(:,17);  % desired values (from optimization)
+        pos2_des = new_data(:,18);
+        pos3_des = new_data(:,19);
+
+        vel1_des = new_data(:,20);
+        vel2_des = new_data(:,21);
+        vel3_des = new_data(:,22);
+
+        tau1 = new_data(:,23);
+        tau2 = new_data(:,24);
+        tau3 = new_data(:,25);
+
         
         N = length(pos1);
         
@@ -214,13 +216,6 @@ function output_data = RunTrajectoryExperiment( ...
         set(h_AC,'XData',[rA(1) rC(1)],'YData',[rA(2) rC(2)]);
         set(h_BD,'XData',[rB(1) rD(1)],'YData',[rB(2) rD(2)]);
         set(h_CE,'XData',[rC(1) rE(1)],'YData',[rC(2) rE(2)]);
-
-        % set(limits1,'XData',[0 0.05*sin(th3-pi/2)]);
-        % set(limits1,'YData',[0 -0.05*cos(th3-pi/2)]);
-        % 
-        % set(limits2,'XData',[0 0.05*sin(th3+pi/3)]);
-        % set(limits2,'YData',[0 -0.05*cos(th3+pi/3)]);
-        % 
         set(hip_motor,'XData',[0 0.05*sin(th3)]);
         set(hip_motor,'YData',[0 -0.05*cos(th3)]);
         
@@ -248,7 +243,7 @@ function output_data = RunTrajectoryExperiment( ...
     
     params.timeout  = (start_period+traj_time+end_period);  
     
-    output_size = 16;    % number of outputs expected
+    output_size = 25;    % number of outputs expected
     output_data = RunExperiment(frdm_ip,frdm_port,input,output_size,params);
     % linkaxes([a1 a3],'x')
     

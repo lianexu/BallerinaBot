@@ -34,8 +34,8 @@ D3_brake = 100;
 I3_brake = 0.02;
 
 % friction comp
-fric_comp_torque = 0.030;
-deadzone_radius = 0.3;
+deadzone_radius = 0.3; % set < 0 to turn off friction comp
+fric_comp_torque = 0.030; 
 
 % boost from foot
 boost_torque = 5.0;
@@ -72,7 +72,7 @@ dcur2 = -output_data(:,10);     % desired current
 duty2 = -output_data(:,11);     % command
 
 pos3 = output_data(:,12);       % position
-vel3 = -output_data(:,13);       % velocity
+vel3 = output_data(:,13);       % velocity
 cur3 = -output_data(:,14);       % current
 dcur3 = -output_data(:,15);     % desired current
 duty3 = -output_data(:,16);     % command  
