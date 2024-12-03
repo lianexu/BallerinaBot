@@ -3,15 +3,13 @@
 function output_data = RunTrajectoryExperiment( ...
     traj_time, pre_buffer_time, post_buffer_time, duty_max, ...
     angle1_init, angle2_init, angle3_init,...
-    K1_pos, K2_pos, K3_pos, ...
-    D1_vel, D2_vel, D3_vel, ...
     tau1_weight, tau2_weight, tau3_weight, ...
     K3_brake, D3_brake, I3_brake, ...
     fric_comp_torque, deadzone_radius, ...
-    boost_torque, boost_duration, ...
-    phase1_playback_speed, phase2_playback_speed)
-    
-    
+    q1_max, q2_min, ...
+    q2_retract_based_on_q1_angle, q2_retract_q1_angle, T_q2_in, ...
+    brake_based_on_q1_angle, brake_release_q1_angle, T_brake, ...
+    T_end)
 
     % Figure for plotting motor data
     figure(1);  clf;       
@@ -29,67 +27,6 @@ function output_data = RunTrajectoryExperiment( ...
     h31 = plot([0],[0]);
     h31.XData = []; h31.YData = [];
     ylabel('Angle 3 (rad)');
-    
-    % a2 = subplot(424);
-    % h2 = plot([0],[0]);
-    % h2.XData = []; h2.YData = [];
-    % ylabel('Velocity 1 (rad/s)');
-    % 
-    % a6 = subplot(425);
-    % h22 = plot([0],[0]);
-    % h22.XData = []; h22.YData = [];
-    % ylabel('Velocity 2 (rad/s)');
-    % 
-    % a10 = subplot(426);
-    % h32 = plot([0],[0]);
-    % h32.XData = []; h32.YData = [];
-    % ylabel('Velocity 3 (rad/s)');
-    
-    % a3 = subplot(424);
-    % h3 = plot([0],[0]);
-    % h3.XData = []; h3.YData = [];
-    % ylabel('Current 1 (A)');
-    % hold on;
-    % subplot(424);
-    % h3 = plot([0],[0],'r');
-    % h3.XData = []; h3.YData = [];
-    % hold off;
-    % 
-    % a7 = subplot(425);
-    % h23 = plot([0],[0]);
-    % h23.XData = []; h23.YData = [];
-    % ylabel('Current 2 (A)');
-    % hold on;
-    % subplot(425);
-    % h24 = plot([0],[0],'r');
-    % h24.XData = []; h24.YData = [];
-    % hold off;
-    % 
-    % a11 = subplot(426);
-    % h33 = plot([0],[0]);
-    % h33.XData = []; h33.YData = [];
-    % ylabel('Current 3 (A)');
-    % hold on;
-    % subplot(426);
-    % h33 = plot([0],[0],'r');
-    % h33.XData = []; h33.YData = [];
-    % hold off;
-    
-    % a4 = subplot(430);
-    % h5 = plot([0],[0]);
-    % h5.XData = []; h5.YData = [];
-    % ylabel('Duty Cycle 1');
-    % 
-    % a8 = subplot(431);
-    % h25 = plot([0],[0]);
-    % h25.XData = []; h25.YData = [];
-    % ylabel('Duty Cycle 2');
-    % 
-    % a12 = subplot(432);
-    % h35 = plot([0],[0]);
-    % h35.XData = []; h35.YData = [];
-    % ylabel('Duty Cycle 3');
-
     
     % Figure for plotting state of the leg
     figure(2)
@@ -127,9 +64,6 @@ function output_data = RunTrajectoryExperiment( ...
     % This function will get called any time there is new data from
     % the Nucleo board. Data comes in blocks, rather than one at a time.
     function my_callback(new_data)
-        % want: 
-
-
         % Parse new data
         t = new_data(:,1);          % time
         pos1 = new_data(:,2);       % position
@@ -150,17 +84,9 @@ function output_data = RunTrajectoryExperiment( ...
         dcur3 = new_data(:,15);     % desired current
         duty3 = new_data(:,16);     % command  
 
-        pos1_des = new_data(:,17);  % desired values (from optimization)
-        pos2_des = new_data(:,18);
-        pos3_des = new_data(:,19);
-
-        vel1_des = new_data(:,20);
-        vel2_des = new_data(:,21);
-        vel3_des = new_data(:,22);
-
-        tau1 = new_data(:,23);
-        tau2 = new_data(:,24);
-        tau3 = new_data(:,25);
+        tau1 = new_data(:,17);
+        tau2 = new_data(:,18);
+        tau3 = new_data(:,19);
 
         
         N = length(pos1);
@@ -168,36 +94,14 @@ function output_data = RunTrajectoryExperiment( ...
         % Update motor data plots
         h1.XData(end+1:end+N) = t;   
         h1.YData(end+1:end+N) = pos1; % switch sign on all plotted values due to direction motors are mounted
-        % h2.XData(end+1:end+N) = t;   
-        % h2.YData(end+1:end+N) = -vel1;
-        % h3.XData(end+1:end+N) = t;   
-        % h3.YData(end+1:end+N) = -cur1;
-        % h4.XData(end+1:end+N) = t;   
-        % h4.YData(end+1:end+N) = -dcur1;
-        % h5.XData(end+1:end+N) = t;   
-        % h5.YData(end+1:end+N) = -duty1;
+
         
         h21.XData(end+1:end+N) = t;   
         h21.YData(end+1:end+N) = pos2;
-        % h22.XData(end+1:end+N) = t;   
-        % h22.YData(end+1:end+N) = -vel2;
-        % h23.XData(end+1:end+N) = t;   
-        % h23.YData(end+1:end+N) = -cur2;
-        % h24.XData(end+1:end+N) = t;   
-        % h24.YData(end+1:end+N) = -dcur2;
-        % h25.XData(end+1:end+N) = t;   
-        % h25.YData(end+1:end+N) = -duty2;
+
 
         h31.XData(end+1:end+N) = t;   
         h31.YData(end+1:end+N) = pos3;
-        % h32.XData(end+1:end+N) = t;   
-        % h32.YData(end+1:end+N) = -vel3;
-        % h33.XData(end+1:end+N) = t;   
-        % h33.YData(end+1:end+N) = -cur3;
-        % h34.XData(end+1:end+N) = t;   
-        % h34.YData(end+1:end+N) = -dcur3;
-        % h35.XData(end+1:end+N) = t;   
-        % h35.YData(end+1:end+N) = -duty3;
         
         % Calculate leg state and update plots
         z = [-pos1(end) -pos2(end) -pos3(end) -vel1(end) -vel2(end) -vel3(end)]';
@@ -233,17 +137,17 @@ function output_data = RunTrajectoryExperiment( ...
     % Specify inputs
     input = [start_period traj_time end_period duty_max];
     input = [input angle1_init angle2_init angle3_init];
-    input = [input K1_pos K2_pos K3_pos];
-    input = [input D1_vel D2_vel D3_vel];
     input = [input tau1_weight tau2_weight tau3_weight];
     input = [input K3_brake D3_brake I3_brake];
     input = [input fric_comp_torque deadzone_radius];
-    input = [input boost_torque boost_duration];
-    input = [input phase1_playback_speed phase2_playback_speed];
+    input = [input q1_max q2_min];
+    input = [input q2_retract_based_on_q1_angle q2_retract_q1_angle T_q2_in];
+    input = [input brake_based_on_q1_angle brake_release_q1_angle T_brake];
+    input = [input T_end];
     
     params.timeout  = (start_period+traj_time+end_period);  
     
-    output_size = 25;    % number of outputs expected
+    output_size = 19;    % number of outputs expected
     output_data = RunExperiment(frdm_ip,frdm_port,input,output_size,params);
     % linkaxes([a1 a3],'x')
     

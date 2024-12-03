@@ -7,8 +7,8 @@
 #include "MotorShield.h" 
 #include "HardwareSetup.h"
 
-#define NUM_INPUTS 25
-#define NUM_OUTPUTS 25 //16
+#define NUM_INPUTS 24
+#define NUM_OUTPUTS 19
 
 #define PULSE_TO_RAD (2.0f*3.14159f / 1200.0f)
 
@@ -64,19 +64,6 @@ float K3_brake;
 float D3_brake;
 float I3_brake;
 
-// trajectory phase timing parameters
-float T1;
-float T2;
-float T3;
-
-//feedback gains
-float K1_pos = 20;
-float K2_pos = 20; 
-float K3_pos = 20;
-
-float D1_vel = 0;
-float D2_vel = 0;
-float D3_vel = 0;
 
 float tau1_weight = 1.0;
 float tau2_weight = 1.0;
@@ -109,14 +96,26 @@ float nu = 0.0005;             // motor viscous friction
 float fric_comp_torque = 0.020; 
 float deadzone_radius = 0.1; //0.5;
 
-float boost_torque = 0.5;
-float boost_duration = 0.1;
 
-float phase1_playback_speed = 3.0;
-float phase2_playack_speed = 1.0;
+float q1_max = 1.73;
+float q2_min = -2.2;
+
+bool q2_retract_based_on_q1_angle = true;
+float q2_retract_q1_angle = 1.5;
+float T_q2_in = 0.16;
+
+bool brake_based_on_q1_angle = true;
+float brake_release_q1_angle = 1.725;
+float T_brake = 0.18 * 3;
+
+float T_end = 3.0;
 
 
+int phase = 1;
 
+// float T1 = T_brake;
+// float T2 = 0.31727828827 * 2.75;
+// float T3;
 
 // Current control interrupt function
 void CurrentLoop() {
@@ -174,8 +173,8 @@ void CurrentLoop() {
     }             
     prev_current_des2 = current_des2; 
 
-    
-    if (t.read() < (T1*phase1_playback_speed-0.1)){ 
+    bool brake_on = (brake_based_on_q1_angle && (angle1 < brake_release_q1_angle)) || (!brake_based_on_q1_angle && (t.read() < T_brake));
+    if (brake_on){ 
         float angle_3_error = angle3_init - angle3;
         angle_3_error = angle3_init - angle3;
         angle_3_cum += angle_3_error;
@@ -222,45 +221,7 @@ void CurrentLoop() {
     }
 }
 
-//function to get the feed forward torques based on the polynomial fit
-float get_val(float t, float params[6]) {
-    float ret = 0.0;
-    ret = params[0]*float(pow(t,5)) +
-        params[1]*float(pow(t,4)) + 
-        params[2]*float(pow(t,3)) + 
-        params[3]*float(pow(t,2)) + 
-        params[4]*float(pow(t,1)) + 
-        params[5]; 
-    return ret;
-}
 
-//function to get the desired position for feedback based on polynomial fit
-int n_pos = 6; //degree of polynomial fit
-float get_pos_val(float t, float params[n_pos]) {
-    float ret = 0.0;
-    ret = params[0]*float(pow(t,5)) +
-        params[1]*float(pow(t,4)) + 
-        params[2]*float(pow(t,3)) + 
-        params[3]*float(pow(t,2)) + 
-        params[4]*float(pow(t,1)) + 
-        params[5];
-    ret = ret * -1.0; // flipped
-    return ret;
-}
-
-//function to get the desired velocity for feedback based on polynomial fit
-int n_vel = 6; //degree of polynomial fit
-float get_vel_val(float t, float params[n_vel]) {
-    float ret = 0.0;
-    ret = params[0]*float(pow(t,5)) +
-        params[1]*float(pow(t,4)) + 
-        params[2]*float(pow(t,3)) + 
-        params[3]*float(pow(t,2)) + 
-        params[4]*float(pow(t,1)) + 
-        params[5];
-    ret = ret * -1.0; // flipped
-    return ret;
-}
 
 int main(void) {
     // Link the terminal with our server and start it up
@@ -269,59 +230,6 @@ int main(void) {
     
     // Continually get input from MATLAB and run experiments
     float input_params[NUM_INPUTS];
-
-    // optimization output fit parameters
-    float tau1_1_params[6] = { 4.4237,   -1.7299,    0.2376 ,  -0.0135  ,  0.0003 ,  -0.0000};
-    float tau2_1_params[6] = {-3.0138 ,   1.5791 ,  -0.2952 ,   0.0268 ,  -0.0013 ,   0.0000};
-    float tau3_1_params[6] = { -0.6592,    1.7183 ,  -0.5141  ,  0.0598 ,  -0.0033 ,  -0.0000};
-
-    float tau1_2_params[6] = {-3.7940  ,  5.8671 ,  -3.4918 ,   0.9967  , -0.1365 ,   0.0073};
-    float tau2_2_params[6] = {-3.7343 ,   6.2641 ,  -4.0279 ,   1.2372  , -0.1821 ,   0.0104};
-    float tau3_2_params[6] = { 0.2933 ,  -0.5147 ,   0.3507 ,  -0.1150  ,  0.0179 ,  -0.0010};
-
-    float pos1_1_params[6] = {-0.4770 ,  -2.0494 ,   0.7029 ,  -0.1047 ,  -0.0007 ,   0.0011};
-    float pos2_1_params[6] = {-1.1277 ,   1.3398 ,  -0.3313 ,   0.0232 ,  -0.0000 ,   0.0000};
-    float pos3_1_params[6] = { 2.9899 ,  -2.4196 ,   0.4864 ,  -0.0337 ,   0.0008 ,  -0.0000};
-
-    float pos1_2_params[6] = { -1.4168 ,   2.2635,   -1.4276 ,   0.4524,   -0.0727,    0.0046};
-    float pos2_2_params[6] = {1.5580 ,  -2.2572 ,   1.2173,   -0.3070 ,   0.0377,   -0.0018};
-    float pos3_2_params[6] = { -1.4436 ,   2.2497,   -0.9807 ,   0.0071 ,   0.0495 ,  -0.0056};
-
-    float vel1_1_params[6] = {4.0636 ,  -1.4882  ,  0.0851  ,  0.0157  , -0.0022 ,  -0.0000};
-    float vel2_1_params[6] = { -2.2409 ,   0.8660,   -0.0800 ,  -0.0019 ,   0.0003 ,   0.0000};
-    float vel3_1_params[6] = {9.5558  , -4.0615  ,  0.5735 ,  -0.0318 ,   0.0006 ,  -0.0000};
-
-    float vel1_2_params[6] = { -4.9749  ,  7.9174 ,  -4.9585 ,   1.5226,   -0.2267 ,   0.0129};
-    float vel2_2_params[6] = { 0.4790 ,   7.0739  , -8.6353  ,  3.5547 ,  -0.6037  ,  0.0373};
-    float vel3_2_params[6] = {1.9053 ,  -3.3990  ,  2.3680 ,  -0.7929  ,  0.1252 ,  -0.0075};
-
-    
-    for (int i = 0; i < 6; ++i) { 
-        tau1_1_params[i] *= float(pow(10,5)); 
-        tau2_1_params[i] *= float(pow(10,5)); 
-        tau3_1_params[i] *= float(pow(10,4)); 
-        tau1_2_params[i] *= float(pow(10,4)); 
-        tau2_2_params[i] *= float(pow(10,4)); 
-        tau3_2_params[i] *= float(pow(10,-13)); 
-
-        pos1_1_params[i] *= float(pow(10, 3));
-        pos2_1_params[i] *= float(pow(10, 4));
-        pos3_1_params[i] *= float(pow(10, 3));
-        pos1_2_params[i] *= float(pow(10, 4));
-        pos2_2_params[i] *= float(pow(10, 4));
-        pos3_2_params[i] *= float(pow(10, 3));
-
-        vel1_1_params[i] *= float(pow(10, 5));
-        vel2_1_params[i] *= float(pow(10, 6));
-        vel3_1_params[i] *= float(pow(10, 5));
-        vel1_2_params[i] *= float(pow(10, 5));
-        vel2_2_params[i] *= float(pow(10, 4));
-        vel3_2_params[i] *= float(pow(10, 5));
-    } 
-
-    T1 = 0.18; // original time
-    T2 = 0.31727828827; // original time
-    T3 = 0.0; // 1.0; //additional time to spin
     
     pc.printf("about to enter while loop \n");
     while(1) {
@@ -339,29 +247,29 @@ int main(void) {
             angle2_init                 = input_params[5];    // Initial angle for q2 (rad)
             angle3_init                 = input_params[6];   // Initial angle for q3 (rad)
 
-            K1_pos                      = input_params[7];
-            K2_pos                      = input_params[8];
-            K3_pos                      = input_params[9];
-
-            D1_vel                      = input_params[10];
-            D2_vel                      = input_params[11];
-            D3_vel                      = input_params[12];
-
-            tau1_weight                 = input_params[13];
-            tau2_weight                 = input_params[14];
-            tau3_weight                 = input_params[15];
+            tau1_weight                 = input_params[7];
+            tau2_weight                 = input_params[8];
+            tau3_weight                 = input_params[9];
             
-            K3_brake                    = input_params[16];
-            D3_brake                    = input_params[17];
-            I3_brake                    = input_params[18];
+            K3_brake                    = input_params[10];
+            D3_brake                    = input_params[11];
+            I3_brake                    = input_params[12];
 
-            fric_comp_torque            = input_params[19];
-            deadzone_radius             = input_params[20];
-            boost_torque                = input_params[21];
-            boost_duration              = input_params[22];
-            
-            phase1_playback_speed       = input_params[23];
-            phase2_playack_speed        = input_params[24];
+            fric_comp_torque            = input_params[13];
+            deadzone_radius             = input_params[14];
+
+            q1_max                      = input_params[15];
+            q2_min                      = input_params[16];
+
+            q2_retract_based_on_q1_angle  = input_params[17];
+            q2_retract_q1_angle         = input_params[18];
+            T_q2_in                     = input_params[19];
+
+            brake_based_on_q1_angle     = input_params[20];
+            brake_release_q1_angle      = input_params[21];
+            T_brake                     = input_params[22];
+
+            T_end                       = input_params[23];
 
 
             // Attach current loop interrupt
@@ -381,19 +289,11 @@ int main(void) {
             float tau2 = 0.0;
             float tau3 = 0.0;
 
-            float pos1_des = 0.0;
-            float pos2_des = 0.0;
-            float pos3_des = 0.0;
-                         
-            float vel1_des = 0.0;
-            float vel2_des = 0.0;
-            float vel3_des = 0.0;
 
             // Run experiment
             t.reset();
             t.start();
-            while ((t.read() < (T1*phase1_playback_speed)+(T2*phase2_playack_speed)+T3)) {
-            // while(t.read() < (T1*phase1_playback_speed)+(T2*phase2_playack_speed)+T3) { 
+            while (phase < 3) {
                 float time = t.read();
                 // Read encoders to get motor states
                 angle1 = encoderA.getPulses() *PULSE_TO_RAD + angle1_init;       
@@ -405,74 +305,45 @@ int main(void) {
                 angle3 = encoderC.getPulses() * PULSE_TO_RAD + angle3_init;       
                 velocity3 = encoderC.getVelocity() * PULSE_TO_RAD;
 
-                tau3 = 0.0; // not controlled by opt params
+                tau1 = 0.0;
+                tau2 = 0.0;
+                tau3 = 0.0;
 
-                if (time < T1*phase1_playback_speed){ // phase 1
-                    time = time/phase1_playback_speed;
-
-                    tau1 = get_val(time, tau1_1_params);
-                    tau2 = get_val(time, tau2_1_params);
-
-                    pos1_des = get_pos_val(time, pos1_1_params);
-                    pos2_des = get_pos_val(time, pos2_1_params);
-                    pos3_des = get_pos_val(time, pos3_1_params);
-
-                    vel1_des = get_vel_val(time, vel1_1_params);
-                    vel2_des = get_vel_val(time, vel2_1_params);
-                    vel3_des = get_vel_val(time, vel3_1_params);
-
-                } else if (time < (T1*phase1_playback_speed)+(T2*phase2_playack_speed)) { // phase 2
-                    time = (time - (T1*phase1_playback_speed))/phase2_playack_speed + T1;
-                    
-                    tau1 = get_val(time, tau1_2_params);
-                    tau2 = get_val(time, tau2_2_params);
-
-                    pos1_des = get_pos_val(time, pos1_2_params);
-                    pos2_des = get_pos_val(time, pos2_2_params);
-                    pos3_des = get_pos_val(time, pos3_2_params);
-
-                    vel1_des = get_vel_val(time, vel1_2_params);
-                    vel2_des = get_vel_val(time, vel2_2_params);
-                    vel3_des = get_vel_val(time, vel3_2_params);
-
-                } else { // extra time in end
-                    K1_pos = 0.0;
-                    D1_vel = 0.0;
-                    K2_pos = 0.0;
-                    D2_vel = 0.0;
-                    K3_pos = 0.0;
-                    D3_vel = 0.0;
-                    tau1 = 0.0;
-                    tau2 = 0.0;
+                if (q2_retract_based_on_q1_angle) {
+                    if ((angle1 > q2_retract_q1_angle) && (angle2 > q2_min + 0.1)) {
+                        tau2 = 1.0;
+                    }
+                } else {
+                    if ((time > T_q2_in) && (angle2 > q2_min + 0.1)) {
+                        tau2 = 1.0;
+                    }
                 }
+
+                if (angle1 < q1_max) {
+                    tau1 = 1.0;
+                } 
+
+                if (time > T_end) {
+                    phase = 3;
+                }
+
                 
-                //find errors
-                float e_pos1 = pos1_des - angle1;
-                float e_pos2 = pos2_des - angle2;
-                float e_pos3 = pos3_des - angle3;
-                
-                float e_vel1 =  vel1_des - velocity1;
-                float e_vel2 = vel2_des - velocity2;
-                float e_vel3 = vel3_des - velocity3;
-                
-                // // Set desired currents with both feedback and feed forward terms           
-                current_des1 = K1_pos*(e_pos1) + D1_vel*(e_vel1) + tau1_weight * tau1/k_t;
-                current_des2 = K2_pos*(e_pos2) + D2_vel*(e_vel2) + tau2_weight * tau2/k_t;
-                current_des3 = K3_pos*(e_pos3) + D3_vel*(e_vel3) + tau3_weight * tau3/k_t;
+                // Set desired currents with both feedback and feed forward terms           
+                current_des1 = tau1_weight * tau1/k_t;
+                current_des2 = tau2_weight * tau2/k_t;
+                current_des3 = tau3_weight * tau3/k_t;
 
 
-                if (time > (T1 * phase1_playback_speed-0.1)){ // friction compensation -- TODO -- enable only in one direction
+                if (time > (T_brake)){ // friction compensation -- TODO -- enable only in one direction
                     if (deadzone_radius > 0) { // friction comp enabled
-                        // if (velocity3 < -deadzone_radius){ //if we are moving backwards, outside the deadzone
-                        //     tau3 -= fric_comp_torque; //friction acts in the positive direction
-                        // }
-                        if (velocity3 > deadzone_radius) { //if we are moving forwards, outside the deadzone
+                        if (velocity3 < -deadzone_radius){ //if we are moving backwards, outside the deadzone
+                            tau3 -= fric_comp_torque; //friction acts in the positive direction
+                        } else if (velocity3 > deadzone_radius) { //if we are moving forwards, outside the deadzone
                             tau3 += fric_comp_torque;//friction acts in the negative direction
                         }
                         current_des3 = tau3/k_t;
                     }
                 }
-
 
 
                 // Form output to send to MATLAB     
@@ -500,22 +371,14 @@ int main(void) {
                 output_data[14] = current_des3;
                 output_data[15]= duty_cycle3;
 
-                // optimization values
-                output_data[16] = pos1_des;
-                output_data[17] = pos2_des;
-                output_data[18] = pos3_des;
-                output_data[19] = vel1_des;
-                output_data[20] = vel2_des;
-                output_data[21] = vel3_des;
-                output_data[22] = tau1;
-                output_data[23] = tau2;
-                output_data[24] = tau3;
+                output_data[16] = tau1;
+                output_data[17] = tau2;
+                output_data[18] = tau3;
 
                 // Send data to MATLAB
                 server.sendData(output_data,NUM_OUTPUTS);
 
                 wait_us(torque_control_period_us);   
-
             }
             
             // Cleanup after experiment

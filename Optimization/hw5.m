@@ -491,6 +491,18 @@ fprintf('τ₁: '); disp(p2_1);
 fprintf('τ₂: '); disp(p2_2);
 fprintf('τ₃: '); disp(p2_3);
 
+% phase1_data = table(t1, tau1_1, tau1_2, tau1_3, tau1_1_fit, tau1_2_fit, tau1_3_fit, ...
+%     'VariableNames', {'Time', 'Tau1_Raw', 'Tau2_Raw', 'Tau3_Raw', ...
+%                       'Tau1_Fit', 'Tau2_Fit', 'Tau3_Fit'});
+% writetable(phase1_data, 'phase1_torques.csv');
+% 
+% phase2_data = table(t2, tau2_1, tau2_2, tau2_3, tau2_1_fit, tau2_2_fit, tau2_3_fit, ...
+%     'VariableNames', {'Time', 'Tau1_Raw', 'Tau2_Raw', 'Tau3_Raw', ...
+%                       'Tau1_Fit', 'Tau2_Fit', 'Tau3_Fit'});
+% writetable(phase2_data, 'phase2_torques.csv');
+
+
+
 function [u_interp] = interpolateOptimizedControl(t_span, u_soln, t_sim, interp_scheme)
     % u_interp = [interp1(t_span(1:end-1), u_soln(1, :), t_sim, interp_scheme);
     %             interp1(t_span(1:end-1), u_soln(2, :), t_sim, interp_scheme);
