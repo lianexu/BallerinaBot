@@ -1,3 +1,5 @@
+// PARAM SWEEP FOLLOWER
+
 #include "mbed.h"
 #include "rtos.h"
 #include "EthernetInterface.h"
@@ -289,6 +291,8 @@ int main(void) {
             float tau2 = 0.0;
             float tau3 = 0.0;
 
+            phase = 1;
+
 
             // Run experiment
             t.reset();
@@ -308,7 +312,8 @@ int main(void) {
                 tau1 = 0.0;
                 tau2 = 0.0;
                 tau3 = 0.0;
-
+                
+                // brake_based_on_q1_angle && (angle1 < brake_release_q1_angle)
                 if (q2_retract_based_on_q1_angle) {
                     if ((angle1 > q2_retract_q1_angle) && (angle2 > q2_min + 0.1)) {
                         tau2 = 1.0;

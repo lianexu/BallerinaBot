@@ -1,4 +1,4 @@
-
+clear all;
 % This is the main MATLAB script for Lab 5.
 % You will need to modify the Mbed code and this script, but should not need to make any other changes.
 
@@ -8,7 +8,7 @@ pre_buffer_time   = 2; % this should be 0 for constant points, 2 for Bezier traj
 post_buffer_time  = 2;
 
 % Maximum duty cycle commanded by controller (should always be <=1.0)
-duty_max   = 0.65; 
+duty_max   = 0.7; 
 
 % Initial leg angles for encoder resets (negative of q1,q2 in lab handout due to direction motors are mounted)
 angle1_init = -pi/3; 
@@ -16,15 +16,15 @@ angle2_init = -0.3;
 angle3_init = 0;
 
 % outer pos, vel, torque FB loop
-K1_pos = 20.0;
-K2_pos = 20.0; 
+K1_pos = 50.0;
+K2_pos = 30.0; 
 K3_pos = 20.0; %20.0;
 
-D1_vel = 0.0;
+D1_vel = 1.0;
 D2_vel = 0.0;
 D3_vel = 0.0; %2.0;
 
-tau1_weight = 3.0;
+tau1_weight = 2.5;
 tau2_weight = 0.75;
 tau3_weight = 0.0; %1.0;
 
@@ -41,9 +41,13 @@ fric_comp_torque = 0.030;
 boost_torque = 5.0;
 boost_duration = 0.1;
 
+T1 = 0.17; 
+T2 = 0.315; 
+T3 = 0.0;
+
 % playback speed of trajectory (speed = 3.0 means the trajectory is played back 3 times slower)
-phase1_playback_speed = 2.75;
-phase2_playback_speed = 3.0; %3.0;
+phase1_playback_speed = 2.75; %2.75
+phase2_playback_speed = 2.5; %3.0;
 
 %% Run Experiment
 [output_data] = RunTrajectoryExperiment(traj_time, pre_buffer_time, post_buffer_time, duty_max, ...
@@ -54,7 +58,8 @@ phase2_playback_speed = 3.0; %3.0;
     K3_brake, D3_brake, I3_brake, ...
     fric_comp_torque, deadzone_radius, ...
     boost_torque, boost_duration, ...
-    phase1_playback_speed, phase2_playback_speed);
+    phase1_playback_speed, phase2_playback_speed, ...
+    T1, T2, T3);
 
 %% Extract data
 % Idk if I got the negative signs correct

@@ -1,3 +1,5 @@
+// OPTIMIZED TRAJECTORY FOLLOWER
+
 #include "mbed.h"
 #include "rtos.h"
 #include "EthernetInterface.h"
@@ -7,7 +9,7 @@
 #include "MotorShield.h" 
 #include "HardwareSetup.h"
 
-#define NUM_INPUTS 25
+#define NUM_INPUTS 28
 #define NUM_OUTPUTS 25 //16
 
 #define PULSE_TO_RAD (2.0f*3.14159f / 1200.0f)
@@ -362,6 +364,10 @@ int main(void) {
             
             phase1_playback_speed       = input_params[23];
             phase2_playack_speed        = input_params[24];
+
+            T1                          = input_params[25];
+            T2                          = input_params[26];
+            T3                          = input_params[27];
 
 
             // Attach current loop interrupt
