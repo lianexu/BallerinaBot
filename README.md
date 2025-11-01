@@ -18,3 +18,6 @@ Edit the animation in Simulation/animate_ballerina.m.
 
 
 3.Connect UDP to laptop
+
+## Hardware 
+NUCLEO-H743ZI2
